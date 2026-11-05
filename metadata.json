@@ -1,0 +1,6 @@
+{
+  "name": "Adam Transport & Logistic",
+  "description": "Portal corporatiu i catàleg tècnic de serveis logístics globals, transport marítim FCL, flota frigorífica FTL i emmagatzematge regulador.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
