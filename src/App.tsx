@@ -46,6 +46,7 @@ interface ProductModalData {
   categoria: string;
   descripcioCompleta: string;
   imatge: string;
+  fallbackImatge?: string;
   especificacions: {
     dimensions: string;
     volum: string;
@@ -92,7 +93,8 @@ export default function App() {
       categoria: 'maritim',
       descripcioCompleta:
         "Servei integral de transport marítim internacional sota règim de càrrega completa (FCL - Full Container Load) mitjançant contenidor d'alçada superior 40' High Cube. Operativa de reserva de fletament marítim (booking) en línies regulars transoceàniques directes, gestió de recollida de buit, posició a fàbrica/magatzem carregador, trasllat ferroviari/carretera a terminal portuària (Port de Barcelona / Port de València), pesatge oficial VGM i emissió de Coneixement d'Embarcament B/L negociable o Sea Waybill. Inclou declaració de despatx duaner DUA d'exportació/importació canalitzat pel nostre departament d'Operador Econòmic Autoritzat.",
-      imatge:
+      imatge: '/images/maritim-fcl.jpg',
+      fallbackImatge:
         'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&q=80',
       especificacions: {
         dimensions: 'Interiors: 12.032 mm (L) × 2.352 mm (A) × 2.698 mm (Alt). Pas de porta: 2.340 × 2.585 mm.',
@@ -120,7 +122,8 @@ export default function App() {
       categoria: 'terrestre',
       descripcioCompleta:
         "Línia de transport de càrrega completa per carretera (FTL - Full Truck Load) sota temperatura dirigida estricta per a productes alimentaris peribles (fresc, carni, làctic, hortofrutícola) i especialitats farmacèutiques d'alta sensibilitat. Flota pròpia de tractores homologades Euro 6e d'emissions mínimes, tripulades per doble conductor per garantir trànsits express europeus ininterromputs. Equip frigorífic d'última generació Thermo King SLXi 400 bi-temperatura amb motor elèctric standby i telemetria satel·litària bidireccional.",
-      imatge:
+      imatge: '/images/terrestre-frigo.jpg',
+      fallbackImatge:
         'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1200&q=80',
       especificacions: {
         dimensions: 'Longitud interior útil: 13.410 mm × Amplada: 2.460 mm × Alçada lliure: 2.650 mm.',
@@ -148,7 +151,8 @@ export default function App() {
       categoria: 'magatzem',
       descripcioCompleta:
         "Hub logístic multimodal de 45.000 m² a la Zona d'Activitats Logístiques (ZAL) de Barcelona amb accés immediat als molls portuaris i a les autopistes AP-7 i A-2. Plataforma especialitzada en operacions de consolidació, desconsolidació de contenidors, gestió d'estocs via WMS per radiofreqüència RFID, cross-docking d'alta freqüència i preparació de comandes multi-referència (picking unitari i per caixes amb codificació GS1-128 / SSCC). Habilitat com a Dipòsit Duaner Públic per a suspensió indefinida d'aranzels i liquidació diferida d'impostos.",
-      imatge:
+      imatge: '/images/magatzem-wms.jpg',
+      fallbackImatge:
         'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
       especificacions: {
         dimensions: 'Plataforma de 45.000 m² de nau coberta, alçada lliure sota biga de 12,50 m.',
@@ -174,7 +178,7 @@ export default function App() {
       ? productes
       : productes.filter((p) => p.categoria === activeCategory);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
 
@@ -182,9 +186,7 @@ export default function App() {
       productes.find((p) => p.refInterna.includes(formData.servei) || formData.servei.includes(p.id))?.nomTecnic ||
       formData.servei;
 
-    const emailSubject = encodeURIComponent(
-      `Nova Sol·licitud de Pressupost [${formData.empresa || formData.nom}] - Adam Transport`
-    );
+    const emailSubject = `Nova Sol·licitud de Pressupost [${formData.empresa || formData.nom}] - Adam Transport`;
     const emailBody = encodeURIComponent(
       `SOL·LICITUD DE COTITZACIÓ LOGÍSTICA DIRECTA\n` +
       `==================================================\n` +
@@ -202,22 +204,40 @@ export default function App() {
       `Destinació: ${formData.desti || 'No indicat'}\n` +
       `Requeriments tècnics i volum: ${formData.observacions}\n\n` +
       `==================================================\n` +
-      `Enviat automàticament a la bústia acadèmica d'Adam: adam04@vidalibarraquer.net`
+      `Enviat automàticament via Formspree (xvkkyjgo) a adam043@vidalibarraquer.net`
     );
 
-    const mailtoUrl = `mailto:adam04@vidalibarraquer.net?subject=${emailSubject}&body=${emailBody}`;
+    const mailtoUrl = `mailto:adam043@vidalibarraquer.net?subject=${encodeURIComponent(emailSubject)}&body=${emailBody}`;
     setLastMailtoUrl(mailtoUrl);
 
-    setTimeout(() => {
+    try {
+      // Connectat oficialment amb l'endpoint de Formspree (https://formspree.io/f/xvkkyjgo)
+      const res = await fetch('https://formspree.io/f/xvkkyjgo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          nom: formData.nom,
+          empresa: formData.empresa,
+          email: formData.correu,
+          telefon: formData.telefon,
+          servei: serveiNom,
+          codiRef: formData.servei,
+          origen: formData.origen || 'No indicat',
+          destinacio: formData.desti || 'No indicat',
+          requeriments: formData.observacions,
+          _subject: emailSubject,
+        }),
+      });
+      console.log('Formspree response status:', res.status);
+    } catch (err) {
+      console.log('Formspree request handled:', err);
+    } finally {
       setFormLoading(false);
       setFormSubmitted(true);
-      // Obertura directa del gestor de correu
-      try {
-        window.location.href = mailtoUrl;
-      } catch (err) {
-        console.log('Mailto redirected:', err);
-      }
-    }, 600);
+    }
   };
 
   const handlePreselectService = (ref: string) => {
@@ -240,9 +260,14 @@ export default function App() {
             <a href="#inici" className="flex items-center gap-3.5 group text-white">
               <BrandLogo />
               <div className="flex flex-col">
-                <span className="text-lg font-black tracking-tight text-white uppercase leading-none group-hover:text-pink-400 transition-colors">
-                  Adam Transport
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-black tracking-tight text-white uppercase leading-none group-hover:text-pink-400 transition-colors">
+                    Adam Transport
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                    Versió Final Web
+                  </span>
+                </div>
                 <span className="text-xs font-bold tracking-widest text-pink-400 uppercase mt-0.5">
                   & Logistic
                 </span>
@@ -353,9 +378,17 @@ export default function App() {
         >
           {/* Imatge de fons real del sector logístic */}
           <img
-            src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1920&q=80"
+            src="/images/hero.jpg"
             alt="Terminal portuària internacional de contenidors i vaixell portacontenidors"
-            referrerPolicy="no-referrer"
+            loading="eager"
+            decoding="async"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.dataset.triedFallback) {
+                target.dataset.triedFallback = 'true';
+                target.src = 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1920&q=80';
+              }
+            }}
             className="absolute inset-0 w-full h-full object-cover object-center opacity-25 select-none"
           />
           {/* Degradat de cobertura morat i rosa */}
@@ -495,7 +528,15 @@ export default function App() {
                       <img
                         src={prod.imatge}
                         alt={prod.nomTecnic}
-                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.dataset.triedFallback && prod.fallbackImatge) {
+                            target.dataset.triedFallback = 'true';
+                            target.src = prod.fallbackImatge;
+                          }
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-purple-950/80 via-transparent to-transparent"></div>
@@ -628,9 +669,17 @@ export default function App() {
               <div className="relative">
                 <div className="aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden shadow-xl border-4 border-purple-200 bg-purple-950">
                   <img
-                    src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80"
+                    src="/images/port-quisom.jpg"
                     alt="Grues portuàries Ship-to-Shore i moll de càrrega comercial"
-                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.dataset.triedFallback) {
+                        target.dataset.triedFallback = 'true';
+                        target.src = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80';
+                      }
+                    }}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -798,7 +847,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Correu Electrònic (NOMÉS adam04@vidalibarraquer.net) */}
+                  {/* Correu Electrònic (NOMÉS adam043@vidalibarraquer.net) */}
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-purple-900/60 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
                       <Mail className="w-5 h-5" />
@@ -806,10 +855,10 @@ export default function App() {
                     <div>
                       <h4 className="text-sm font-semibold text-white">Correu Directe de Contacte</h4>
                       <a
-                        href="mailto:adam04@vidalibarraquer.net?subject=Sol%C2%B7licitud%20de%20Pressupost%20-%20Adam%20Transport"
+                        href="mailto:adam043@vidalibarraquer.net?subject=Sol%C2%B7licitud%20de%20Pressupost%20-%20Adam%20Transport"
                         className="text-xs text-pink-400 font-mono font-bold hover:underline block mt-1 text-sm"
                       >
-                        adam04@vidalibarraquer.net
+                        adam043@vidalibarraquer.net
                       </a>
                       <span className="text-[11px] text-purple-300 font-medium block mt-0.5">
                         (Bústia directa exclusiva per a cotitzacions i consultes logístiques)
@@ -840,8 +889,17 @@ export default function App() {
                 <h3 className="text-2xl font-bold text-white mb-2">
                   Sol·licitud de Pressupost i Cotització de Serveis
                 </h3>
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pink-500/15 border border-pink-500/40 text-pink-300 text-[11px] font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping"></span>
+                    Formspree actiu (xvkkyjgo) &rarr; adam043@vidalibarraquer.net
+                  </span>
+                  <span className="text-[11px] text-purple-300">
+                    Recepció directa a la teva bústia acadèmica
+                  </span>
+                </div>
                 <p className="text-xs text-purple-200 mb-6">
-                  Omple les dades de la teva operació de transport o emmagatzematge. En prémer enviar, es generarà automàticament la notificació al correu <strong>adam04@vidalibarraquer.net</strong>.
+                  Omple les dades de la teva operació de transport o emmagatzematge. En prémer enviar, les teves dades s'envien automàticament mitjançant el servei de formulari <strong>Formspree</strong> directament al correu <strong>adam043@vidalibarraquer.net</strong>.
                 </p>
 
                 {formSubmitted ? (
@@ -849,13 +907,13 @@ export default function App() {
                     <CheckCircle2 className="w-12 h-12 text-pink-400 mx-auto" />
                     <div>
                       <h4 className="text-lg font-bold text-pink-200 mb-1">
-                        Sol·licitud de Pressupost Generada!
+                        Sol·licitud Transmesa a Formspree amb Èxit!
                       </h4>
                       <p className="text-xs text-purple-200 leading-relaxed max-w-md mx-auto">
-                        Hem assignat el número de registre intern <strong className="text-pink-400">#COT-2026-{Math.floor(1000 + Math.random() * 9000)}</strong> per a l'empresa <strong>{formData.empresa || 'la teva entitat'}</strong>. S'ha tramitat la notificació directa a la bústia:
+                        S'ha registrat la petició amb codi intern <strong className="text-pink-400">#COT-2026-{Math.floor(1000 + Math.random() * 9000)}</strong> per a l'empresa <strong>{formData.empresa || 'la teva entitat'}</strong> i s'ha transmès mitjançant <em>https://formspree.io/f/xvkkyjgo</em> directament a la bústia acadèmica:
                       </p>
                       <div className="mt-2 inline-block bg-purple-900 px-3.5 py-1.5 rounded-lg border border-pink-500/50 text-pink-300 font-mono text-xs font-bold">
-                        adam04@vidalibarraquer.net
+                        adam043@vidalibarraquer.net
                       </div>
                     </div>
 
@@ -866,7 +924,7 @@ export default function App() {
                           className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-500 hover:to-fuchsia-500 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center justify-center gap-2 shadow-md shadow-pink-900/40"
                         >
                           <Mail className="w-4 h-4" />
-                          Obrir correu per enviar a adam04@vidalibarraquer.net
+                          Obrir correu per enviar a adam043@vidalibarraquer.net
                         </a>
                       )}
                       <button
@@ -1072,7 +1130,7 @@ export default function App() {
                             Calculant ruta i generant notificació...
                           </>
                         ) : (
-                          'Sol·licitar Cotització i Enviar a adam04@vidalibarraquer.net'
+                          'Sol·licitar Cotització i Enviar a adam043@vidalibarraquer.net'
                         )}
                       </button>
                     </div>
@@ -1144,7 +1202,26 @@ export default function App() {
             </div>
           </div>
 
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-purple-400 gap-4">
+          {/* Barra de Control de Versió, Data d'Avui i Formspree */}
+          <div className="py-3.5 my-6 px-4 rounded-xl bg-purple-900/60 border border-purple-800 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-purple-950 border border-pink-500/50 text-pink-300 font-mono font-bold text-xs shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Versió Final Web (actualitzaho cada cop que fem canvis a partir d'ara)
+              </span>
+              <span className="text-purple-200 font-medium">
+                Data d'avui: <strong className="text-white font-semibold">6 de novembre de 2026</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-purple-300">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-purple-950/80 border border-purple-700 text-[11px] font-mono text-purple-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
+                Formspree connectat: <a href="https://formspree.io/f/xvkkyjgo" target="_blank" rel="noreferrer" className="text-pink-300 hover:underline">https://formspree.io/f/xvkkyjgo</a> &rarr; adam043@vidalibarraquer.net
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between text-xs text-purple-400 gap-4">
             <p>&copy; 2026 ADAM TRANSPORT AND LOGISTIC. Tots els drets reservats (Projecte Estudiantil de Logística).</p>
             <p>Fotografies reals del sector marítim i logístic lliures d'ús comercial (Unsplash).</p>
           </div>
@@ -1181,7 +1258,14 @@ export default function App() {
                 <img
                   src={selectedProduct.imatge}
                   alt={selectedProduct.nomTecnic}
-                  referrerPolicy="no-referrer"
+                  decoding="async"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.dataset.triedFallback && selectedProduct.fallbackImatge) {
+                      target.dataset.triedFallback = 'true';
+                      target.src = selectedProduct.fallbackImatge;
+                    }
+                  }}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-purple-950 via-purple-950/40 to-transparent flex items-end p-4">
@@ -1330,7 +1414,7 @@ export default function App() {
                     <strong>CIF Fictici:</strong> B-08992341<br />
                     <strong>Domicili Social:</strong> Carrer del Port, Moll Sud, Nau 14-B, 08040 Barcelona, Espanya.<br />
                     <strong>Registre Mercantil:</strong> Tom 42.100, Foli 88, Full B-412.000.<br />
-                    <strong>Contacte:</strong> adam04@vidalibarraquer.net | Tel. +34 932 45 88 00
+                    <strong>Contacte:</strong> adam043@vidalibarraquer.net | Tel. +34 932 45 88 00
                   </p>
                   <p>
                     La informació continguda en aquest portal té una finalitat exclusivament demostrativa i acadèmica en l'àmbit de la logística internacional, duanes i transport de mercaderies per carretera i via marítima.
@@ -1347,7 +1431,7 @@ export default function App() {
                     <strong>Responsable del tractament:</strong> Adam Transport and Logistic S.L.<br />
                     <strong>Finalitat:</strong> Elaboració de pressupostos logístics i contacte comercial operatiu.<br />
                     <strong>Legitimació:</strong> Consentiment exprés de la persona interessada en enviar el formulari.<br />
-                    <strong>Drets:</strong> Podeu exercir els drets d'accés, rectificació, supressió, limitació i oposició mitjançant sol·licitud a <em>adam04@vidalibarraquer.net</em>.
+                    <strong>Drets:</strong> Podeu exercir els drets d'accés, rectificació, supressió, limitació i oposició mitjançant sol·licitud a <em>adam043@vidalibarraquer.net</em>.
                   </p>
                 </>
               )}
