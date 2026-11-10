@@ -12,22 +12,31 @@ import {
   CheckCircle2,
   Globe2,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  Ship,
+  Truck,
+  Warehouse,
+  Thermometer,
+  Calculator,
+  Compass,
+  Layers,
+  ExternalLink,
+  Info
 } from 'lucide-react';
 
-// Logotip Corporatiu en Paleta Morat & Rosa:
-// Hexàgon isomètric de càrrega multimodal amb monògram "A" i vectors de flux en fúcsia radiant i morat
-function BrandLogo({ className = "w-11 h-11" }: { className?: string }) {
+// Logotip Corporatiu ADAM TRANSPORT AND LOGISTIC:
+// Hexàgon isomètric de transport multimodal amb monògram "A" estilitzat en gradient morat i rosa
+function BrandLogo({ className = "w-10 h-10" }: { className?: string }) {
   return (
-    <div className={`${className} rounded-xl bg-gradient-to-br from-purple-700 via-fuchsia-700 to-pink-500 p-0.5 shadow-md shadow-fuchsia-950/20 group-hover:scale-105 transition-transform flex items-center justify-center`}>
+    <div className={`${className} rounded-xl bg-gradient-to-br from-purple-700 via-fuchsia-600 to-pink-500 p-0.5 shadow-md shadow-purple-950/20 group-hover:scale-105 transition-transform flex items-center justify-center shrink-0`}>
       <div className="w-full h-full bg-purple-950 rounded-[10px] flex items-center justify-center p-1.5">
         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           {/* Hexàgon exterior de contenidor / càrrega global */}
           <path d="M20 3L35 11.66V28.34L20 37L5 28.34V11.66L20 3Z" stroke="#f472b6" strokeWidth="2.4" strokeLinejoin="round" />
-          {/* Vèrtexs interiors de volum 3D */}
+          {/* Vèrtexs interiors 3D de cub multimodal */}
           <path d="M20 3V20M35 11.66L20 20M5 11.66L20 20" stroke="#c084fc" strokeWidth="1.8" strokeLinejoin="round" />
           <path d="M20 20V37" stroke="#e879f9" strokeWidth="1.8" strokeDasharray="2 2" />
-          {/* Monògram "A" estilitzat i fletxa d'enllaç multimodal en rosa vibrant */}
+          {/* Monògram "A" i fletxa d'enllaç multimodal */}
           <path d="M14 27L20 14L26 27" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M16.5 22.5H23.5" stroke="#f472b6" strokeWidth="2.2" strokeLinecap="round" />
           <circle cx="20" cy="14" r="1.5" fill="#fbcfe8" />
@@ -43,10 +52,10 @@ interface ProductModalData {
   refInterna: string;
   codiTecnic: string;
   normativa: string;
-  categoria: string;
+  categoria: 'maritim' | 'terrestre' | 'magatzem';
   descripcioCompleta: string;
   imatge: string;
-  fallbackImatge?: string;
+  fallbackImatge: string;
   especificacions: {
     dimensions: string;
     volum: string;
@@ -65,24 +74,41 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<'tots' | 'maritim' | 'terrestre' | 'magatzem'>('tots');
   const [selectedProduct, setSelectedProduct] = useState<ProductModalData | null>(null);
-  const [legalModal, setLegalModal] = useState<string | null>(null);
-  
+  const [legalModal, setLegalModal] = useState<'avis' | 'privacitat' | 'cookies' | 'condicions' | null>(null);
+
+  // Eina tècnica interactiva seleccionada al Hero / Eines
+  const [activeToolTab, setActiveToolTab] = useState<'simulador' | 'incoterms' | 'cubatge'>('simulador');
+
+  // Estat del simulador de rutes
+  const [rutaSimulada, setRutaSimulada] = useState({
+    origen: 'Port de Barcelona',
+    desti: 'Xangai (Port de Yangshan)',
+    mode: 'maritim-fcl',
+  });
+
+  // Estat de la calculadora de cubatge
+  const [calcPalets, setCalcPalets] = useState(24);
+  const [calcTipus, setCalcTipus] = useState<'euro' | 'iso'>('euro');
+  const [calcAlcada, setCalcAlcada] = useState(1.6); // en metres
+
   // Estat del formulari de contacte
   const [formData, setFormData] = useState({
     nom: '',
     empresa: '',
     correu: '',
     telefon: '',
-    servei: 'ATL-FCL-40HC',
+    servei: 'ATL-FCL-40HC-INT',
     origen: '',
     desti: '',
     volum: '',
     observacions: '',
+    incoterm: 'CIF',
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [lastMailtoUrl, setLastMailtoUrl] = useState('');
 
+  // Els 3 Productes Logístics Concrets de la Rúbrica
   const productes: ProductModalData[] = [
     {
       id: 'maritim-fcl',
@@ -94,14 +120,13 @@ export default function App() {
       descripcioCompleta:
         "Servei integral de transport marítim internacional sota règim de càrrega completa (FCL - Full Container Load) mitjançant contenidor d'alçada superior 40' High Cube. Operativa de reserva de fletament marítim (booking) en línies regulars transoceàniques directes, gestió de recollida de buit, posició a fàbrica/magatzem carregador, trasllat ferroviari/carretera a terminal portuària (Port de Barcelona / Port de València), pesatge oficial VGM i emissió de Coneixement d'Embarcament B/L negociable o Sea Waybill. Inclou declaració de despatx duaner DUA d'exportació/importació canalitzat pel nostre departament d'Operador Econòmic Autoritzat.",
       imatge: '/images/maritim-fcl.jpg',
-      fallbackImatge:
-        'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&q=80',
+      fallbackImatge: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&q=80',
       especificacions: {
         dimensions: 'Interiors: 12.032 mm (L) × 2.352 mm (A) × 2.698 mm (Alt). Pas de porta: 2.340 × 2.585 mm.',
-        volum: '76,40 m³ (CBM) / 2.700 peus cúbics útils.',
+        volum: '76,40 m³ (CBM) / 2.700 peus cúbics útils (+12% respecte 40ft estàndard).',
         tara: '3.900 kg (estructura d\'acer Corten anticorrosiu).',
         payload: '28.600 kg càrrega útil màxima neta (Massa Màxima Bruta MGW: 32.500 kg).',
-        capacitatPalets: '25 Europalets normalitzats (1.200 × 800 mm) o 21 Palets americans/ISO (1.200 × 1.000 mm) en planta única.',
+        capacitatPalets: '25 Europalets normalitzats (1.200 × 800 mm) o 21 Palets ISO/americans (1.200 × 1.000 mm).',
         incoterms: 'FOB (Free On Board), CIF (Cost, Insurance & Freight), CFR, DAP (Delivered at Place) i DDP.',
         documentacio: 'Bill of Lading marítim (B/L) telemàtic, DUA d\'exportació/importació amb certificat OEA, codi EORI, certificat de pesatge VGM (mètode 1 per bàscula calibrada) i precinte d\'alta seguretat ISO/PAS 17712.',
         certificats: 'OEA-F (Simplificacions Duaneres i Seguretat), Certificat de Fumigació fito-sanitari NIMF-15 per a fustes d\'estiba.',
@@ -123,8 +148,7 @@ export default function App() {
       descripcioCompleta:
         "Línia de transport de càrrega completa per carretera (FTL - Full Truck Load) sota temperatura dirigida estricta per a productes alimentaris peribles (fresc, carni, làctic, hortofrutícola) i especialitats farmacèutiques d'alta sensibilitat. Flota pròpia de tractores homologades Euro 6e d'emissions mínimes, tripulades per doble conductor per garantir trànsits express europeus ininterromputs. Equip frigorífic d'última generació Thermo King SLXi 400 bi-temperatura amb motor elèctric standby i telemetria satel·litària bidireccional.",
       imatge: '/images/terrestre-frigo.jpg',
-      fallbackImatge:
-        'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1200&q=80',
+      fallbackImatge: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1200&q=80',
       especificacions: {
         dimensions: 'Longitud interior útil: 13.410 mm × Amplada: 2.460 mm × Alçada lliure: 2.650 mm.',
         volum: '87,50 m³ útils.',
@@ -152,8 +176,7 @@ export default function App() {
       descripcioCompleta:
         "Hub logístic multimodal de 45.000 m² a la Zona d'Activitats Logístiques (ZAL) de Barcelona amb accés immediat als molls portuaris i a les autopistes AP-7 i A-2. Plataforma especialitzada en operacions de consolidació, desconsolidació de contenidors, gestió d'estocs via WMS per radiofreqüència RFID, cross-docking d'alta freqüència i preparació de comandes multi-referència (picking unitari i per caixes amb codificació GS1-128 / SSCC). Habilitat com a Dipòsit Duaner Públic per a suspensió indefinida d'aranzels i liquidació diferida d'impostos.",
       imatge: '/images/magatzem-wms.jpg',
-      fallbackImatge:
-        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+      fallbackImatge: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
       especificacions: {
         dimensions: 'Plataforma de 45.000 m² de nau coberta, alçada lliure sota biga de 12,50 m.',
         volum: '38.500 buits d\'emmagatzematge paletitzat en estanteries industrials dinàmiques i convencionals.',
@@ -178,20 +201,69 @@ export default function App() {
       ? productes
       : productes.filter((p) => p.categoria === activeCategory);
 
+  // Estimador de rutes
+  const calcularEstimacio = () => {
+    if (rutaSimulada.mode === 'maritim-fcl') {
+      if (rutaSimulada.desti.includes('Xangai')) {
+        return { temps: '26-28 dies', dist: '9.850 milles nàutiques', incoterm: 'CIF / CFR', reduccio: '-65% CO₂ eq/t' };
+      }
+      if (rutaSimulada.desti.includes('Nova York')) {
+        return { temps: '11-13 dies', dist: '3.800 milles nàutiques', incoterm: 'FOB / CIF', reduccio: '-58% CO₂ eq/t' };
+      }
+      return { temps: '16-18 dies', dist: '5.200 milles nàutiques', incoterm: 'CIF / DAP', reduccio: '-60% CO₂ eq/t' };
+    } else {
+      if (rutaSimulada.desti.includes('Rotterdam')) {
+        return { temps: '28-32 hores', dist: '1.480 km per carretera', incoterm: 'DAP / DDP', reduccio: '-38% Euro 6e' };
+      }
+      return { temps: '34-38 hores', dist: '1.920 km express', incoterm: 'DAP / CPT', reduccio: '-35% Euro 6e' };
+    }
+  };
+
+  const estimacioActual = calcularEstimacio();
+
+  // Càlcul de cubatge estimat
+  const volumUnitariPalet = calcTipus === 'euro' ? (1.2 * 0.8 * calcAlcada) : (1.2 * 1.0 * calcAlcada);
+  const volumTotalEstimats = (calcPalets * volumUnitariPalet).toFixed(1);
+  const equipRecomanat = Number(volumTotalEstimats) <= 33 ? "Semiremolc Frigorífic FTL (fins a 33 palets)" : "Contenidor 40' High Cube (fins a 76,4 m³)";
+
+  const handlePreselectService = (ref: string) => {
+    setFormData((prev) => ({ ...prev, servei: ref }));
+    const element = document.getElementById('contacte');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleApplySimulatedRoute = () => {
+    setFormData((prev) => ({
+      ...prev,
+      origen: rutaSimulada.origen,
+      desti: rutaSimulada.desti,
+      servei: rutaSimulada.mode === 'maritim-fcl' ? 'ATL-FCL-40HC-INT' : 'ATL-REEF-EU33-ATP',
+      incoterm: estimacioActual.incoterm.split(' / ')[0],
+    }));
+    const element = document.getElementById('contacte');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Tramitació del formulari connectat oficialment a Formspree
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
 
     const serveiNom =
-      productes.find((p) => p.refInterna.includes(formData.servei) || formData.servei.includes(p.id))?.nomTecnic ||
+      productes.find((p) => p.refInterna === formData.servei || formData.servei.includes(p.id))?.nomTecnic ||
       formData.servei;
 
-    const emailSubject = `Nova Sol·licitud de Pressupost [${formData.empresa || formData.nom}] - Adam Transport`;
+    const emailSubject = `Sol·licitud de Pressupost [${formData.empresa || formData.nom}] - Adam Transport`;
     const emailBody = encodeURIComponent(
       `SOL·LICITUD DE COTITZACIÓ LOGÍSTICA DIRECTA\n` +
       `==================================================\n` +
       `Producte / Servei: ${serveiNom}\n` +
-      `Codi / Ref: ${formData.servei}\n\n` +
+      `Codi / Referència: ${formData.servei}\n` +
+      `Incoterm sol·licitat: ${formData.incoterm}\n\n` +
       `DADES DE L'EMPRESA I CONTACTE:\n` +
       `--------------------------------------------------\n` +
       `Nom i Cognoms: ${formData.nom}\n` +
@@ -202,17 +274,16 @@ export default function App() {
       `--------------------------------------------------\n` +
       `Origen: ${formData.origen || 'No indicat'}\n` +
       `Destinació: ${formData.desti || 'No indicat'}\n` +
-      `Requeriments tècnics i volum: ${formData.observacions}\n\n` +
+      `Requeriments tècnics: ${formData.observacions}\n\n` +
       `==================================================\n` +
-      `Enviat automàticament via Formspree (xvkkyjgo) a adam043@vidalibarraquer.net`
+      `Enviat automàticament a adam043@vidalibarraquer.net mitjançant Formspree`
     );
 
     const mailtoUrl = `mailto:adam043@vidalibarraquer.net?subject=${encodeURIComponent(emailSubject)}&body=${emailBody}`;
     setLastMailtoUrl(mailtoUrl);
 
     try {
-      // Connectat oficialment amb l'endpoint de Formspree (https://formspree.io/f/xvkkyjgo)
-      const res = await fetch('https://formspree.io/f/xvkkyjgo', {
+      await fetch('https://formspree.io/f/xvkkyjgo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,91 +296,81 @@ export default function App() {
           telefon: formData.telefon,
           servei: serveiNom,
           codiRef: formData.servei,
+          incoterm: formData.incoterm,
           origen: formData.origen || 'No indicat',
           destinacio: formData.desti || 'No indicat',
           requeriments: formData.observacions,
           _subject: emailSubject,
         }),
       });
-      console.log('Formspree response status:', res.status);
     } catch (err) {
-      console.log('Formspree request handled:', err);
+      console.log('Formspree response handled:', err);
     } finally {
       setFormLoading(false);
       setFormSubmitted(true);
     }
   };
 
-  const handlePreselectService = (ref: string) => {
-    setFormData((prev) => ({ ...prev, servei: ref }));
-    const element = document.getElementById('contacte');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-purple-50/40 text-slate-900 antialiased flex flex-col selection:bg-fuchsia-600 selection:text-white">
+    <div className="min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col selection:bg-fuchsia-600 selection:text-white">
       {/* ======================================================== */}
-      {/* 1. NAVBAR SUPERIOR (PALETA MORAT & ROSA)                 */}
+      {/* 1. NAVBAR SUPERIOR (PALETA MORAT PROFUND & FÚCSIA)        */}
       {/* ======================================================== */}
-      <header className="sticky top-0 z-50 bg-purple-950/95 backdrop-blur-md border-b border-purple-900 shadow-md transition-all">
+      <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-purple-900/60 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Logotip i Nom de l'Empresa (A dalt a l'esquerra) */}
-            <a href="#inici" className="flex items-center gap-3.5 group text-white">
+          <div className="flex items-center justify-between h-20 gap-8">
+            {/* Zone 1: Brand wordmark & Logo */}
+            <a href="#inici" className="flex items-center gap-3.5 group shrink-0">
               <BrandLogo />
               <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-black tracking-tight text-white uppercase leading-none group-hover:text-pink-400 transition-colors">
-                    Adam Transport
-                  </span>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/40">
-                    Versió Final Web
-                  </span>
-                </div>
-                <span className="text-xs font-bold tracking-widest text-pink-400 uppercase mt-0.5">
+                <span className="text-lg font-black tracking-tight text-white uppercase leading-none group-hover:text-pink-400 transition-colors">
+                  Adam Transport
+                </span>
+                <span className="text-xs font-bold tracking-widest text-fuchsia-400 uppercase mt-0.5">
                   & Logistic
                 </span>
               </div>
             </a>
 
-            {/* Menú de Navegació d'Escriptori */}
-            <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-purple-200">
-              <a href="#inici" className="hover:text-pink-300 transition-colors">
+            {/* Zone 2: Navigation links */}
+            <nav className="hidden md:flex items-center space-x-7 text-sm font-semibold text-slate-300">
+              <a href="#inici" className="hover:text-pink-400 transition-colors whitespace-nowrap">
                 Inici
               </a>
-              <a href="#serveis" className="hover:text-pink-300 transition-colors">
+              <a href="#serveis" className="hover:text-pink-400 transition-colors whitespace-nowrap">
                 Serveis / Catàleg
               </a>
-              <a href="#quisom" className="hover:text-pink-300 transition-colors">
+              <a href="#eines" className="hover:text-pink-400 transition-colors whitespace-nowrap">
+                Simulador & Incoterms
+              </a>
+              <a href="#quisom" className="hover:text-pink-400 transition-colors whitespace-nowrap">
                 Qui Som
               </a>
-              <a href="#blog" className="hover:text-pink-300 transition-colors">
+              <a href="#blog" className="hover:text-pink-400 transition-colors whitespace-nowrap">
                 Blog
               </a>
-              <a href="#contacte" className="hover:text-pink-300 transition-colors">
+              <a href="#contacte" className="hover:text-pink-400 transition-colors whitespace-nowrap">
                 Contacte
               </a>
             </nav>
 
-            {/* Crida a l'Acció Navbar (Gradient Morat a Rosa) */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* Zone 3: Primary action button */}
+            <div className="hidden md:flex items-center gap-3 shrink-0">
               <a
                 href="#contacte"
-                className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold text-sm shadow-md shadow-pink-900/30 transition-all focus:ring-2 focus:ring-pink-400 focus:outline-hidden"
+                className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-600 hover:from-purple-600 hover:to-pink-500 text-white font-semibold text-sm shadow-md shadow-fuchsia-950/40 transition-all focus:ring-2 focus:ring-pink-400 focus:outline-hidden whitespace-nowrap"
               >
                 Demanar Pressupost
               </a>
             </div>
 
-            {/* Botó Menú Mòbil */}
+            {/* Mobile menu trigger */}
             <div className="md:hidden flex items-center">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label={mobileMenuOpen ? 'Tancar menú' : 'Obrir menú'}
-                className="p-2.5 rounded-lg text-purple-300 hover:text-white hover:bg-purple-900 focus:outline-hidden transition-colors"
+                className="p-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-purple-900/60 focus:outline-hidden transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -317,41 +378,48 @@ export default function App() {
           </div>
         </div>
 
-        {/* Menú Desplegable Mòbil */}
+        {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-purple-900 bg-purple-950 px-4 pt-3 pb-6 space-y-2.5 animate-fadeIn">
+          <div className="md:hidden border-b border-purple-900/80 bg-slate-950/98 px-4 pt-3 pb-6 space-y-2.5 animate-fadeIn">
             <a
               href="#inici"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300"
+              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
             >
               Inici
             </a>
             <a
               href="#serveis"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300"
+              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
             >
               Serveis / Catàleg
             </a>
             <a
+              href="#eines"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
+            >
+              Simulador & Incoterms
+            </a>
+            <a
               href="#quisom"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300"
+              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
             >
               Qui Som
             </a>
             <a
               href="#blog"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300"
+              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
             >
               Blog
             </a>
             <a
               href="#contacte"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300"
+              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
             >
               Contacte
             </a>
@@ -359,7 +427,7 @@ export default function App() {
               <a
                 href="#contacte"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-center w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm hover:opacity-90"
+                className="block w-full text-center py-2.5 rounded-lg bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-600 text-white font-semibold text-sm"
               >
                 Demanar Pressupost
               </a>
@@ -370,13 +438,10 @@ export default function App() {
 
       <main className="flex-1">
         {/* ======================================================== */}
-        {/* 2. PORTADA HERO (Morat Profund, Fúcsia & Rosa)           */}
+        {/* 2. PORTADA HERO: SPLIT ASIMÈTRIC AMB SIMULADOR EN VIVU   */}
         {/* ======================================================== */}
-        <section
-          id="inici"
-          className="relative min-h-[85vh] flex items-center justify-center bg-purple-950 text-white overflow-hidden"
-        >
-          {/* Imatge de fons real del sector logístic */}
+        <section id="inici" className="relative min-h-[90vh] flex items-center bg-radial-[at_top_right] from-purple-900/50 via-slate-950 to-slate-950 text-white overflow-hidden py-16 lg:py-24">
+          {/* Fons fotogràfic logístic local d'alta resolució */}
           <img
             src="/images/hero.jpg"
             alt="Terminal portuària internacional de contenidors i vaixell portacontenidors"
@@ -389,141 +454,250 @@ export default function App() {
                 target.src = 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1920&q=80';
               }
             }}
-            className="absolute inset-0 w-full h-full object-cover object-center opacity-25 select-none"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-20 select-none pointer-events-none"
           />
-          {/* Degradat de cobertura morat i rosa */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-950 via-purple-950/90 to-pink-950/50"></div>
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 w-full">
-            <div className="max-w-2xl lg:max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-900/60 border border-pink-400/30 text-pink-300 text-xs font-semibold tracking-wider uppercase mb-6 backdrop-blur-xs">
-                <Globe2 className="w-3.5 h-3.5 text-pink-400" />
-                <span>Solucions Logístiques Globals & Comerç Internacional</span>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              
+              {/* Columna Esquerra: Proposició de Valor Comercial */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-fuchsia-400 uppercase">
+                  <span>Solucions Logístiques Globals</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Comerç Internacional</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Port de Barcelona</span>
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] max-w-2xl">
+                  Enginyeria en transport multimodal i cadena de fred port-a-porta.
+                </h1>
+
+                <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
+                  A <strong className="text-white font-semibold">ADAM TRANSPORT AND LOGISTIC</strong> coordinem fletament marítim de contenidors FCL, flotes frigorífiques terrestres certificades ATP Classe FRC i magatzem regulador autoritzat DA a la ZAL de Barcelona.
+                </p>
+
+                <div className="pt-2 flex flex-col sm:flex-row gap-4">
+                  <a
+                    href="#contacte"
+                    className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-xl shadow-fuchsia-950/50 transition-all cursor-pointer"
+                  >
+                    Sol·licitar Cotització Directa
+                    <ArrowRight className="ml-2 w-4 h-4 text-white" />
+                  </a>
+
+                  <a
+                    href="#serveis"
+                    className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-slate-900/80 text-slate-200 font-semibold text-sm border border-purple-800/80 hover:bg-purple-900/40 hover:text-white transition-all cursor-pointer"
+                  >
+                    Consultar Catàleg Tècnic
+                  </a>
+                </div>
+
+                {/* KPI Bar en Hero */}
+                <div className="pt-6 border-t border-purple-900/50 grid grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <span className="block text-slate-400">Règim Duaner</span>
+                    <strong className="text-sm font-bold text-white block mt-0.5">OEA-F Integral</strong>
+                  </div>
+                  <div>
+                    <span className="block text-slate-400">Temperatura Dirigida</span>
+                    <strong className="text-sm font-bold text-pink-400 block mt-0.5">ATP / FRC -25ºC</strong>
+                  </div>
+                  <div>
+                    <span className="block text-slate-400">Capacitat WMS</span>
+                    <strong className="text-sm font-bold text-white block mt-0.5">45.000 m² ZAL</strong>
+                  </div>
+                </div>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight mb-6">
-                Liderant el transport i la cadena de subministrament internacional.
-              </h1>
+              {/* Columna Dreta: Targeta Interactiva de Càlcul Tècnic de Ruta */}
+              <div className="lg:col-span-5 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-purple-800/80 p-6 sm:p-7 shadow-2xl shadow-purple-950/60">
+                <div className="flex items-center justify-between pb-4 border-b border-purple-900/80">
+                  <div className="flex items-center gap-2">
+                    <Compass className="w-5 h-5 text-pink-400" />
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                      Simulador de Trànsit Operatiu
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono text-fuchsia-300">
+                    Càlcul en Temps Real
+                  </span>
+                </div>
 
-              <p className="text-lg sm:text-xl text-purple-100/90 mb-10 leading-relaxed font-normal">
-                A <strong className="text-pink-400 font-semibold">ADAM TRANSPORT AND LOGISTIC</strong> sincronitzem càrrega marítima FCL/LCL, flotes terrestres frigorífiques certificades ATP i centres de distribució automatitzats WMS per connectar la teva indústria amb els mercats mundials de forma segura, puntual i homologada.
-              </p>
+                <div className="mt-5 space-y-4 text-xs">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Port / Hub d'Origen:</label>
+                    <select
+                      value={rutaSimulada.origen}
+                      onChange={(e) => setRutaSimulada({ ...rutaSimulada, origen: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-medium focus:ring-2 focus:ring-pink-500 outline-hidden"
+                    >
+                      <option value="Port de Barcelona">Port de Barcelona (Terminal BEST / APM)</option>
+                      <option value="ZAL Barcelona Prat">ZAL Barcelona Prat (Hub WMS)</option>
+                      <option value="Port de València">Port de València (Moll de la Xina)</option>
+                      <option value="Lleida Terminal Ferroviària">Lleida Plataforma Intermodal</option>
+                    </select>
+                  </div>
 
-              {/* Botons d'acció en Morat & Rosa */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a
-                  href="#contacte"
-                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-fuchsia-600 to-pink-500 text-white font-bold text-base shadow-lg shadow-pink-600/30 hover:shadow-pink-500/40 hover:opacity-95 transform hover:-translate-y-0.5 transition-all"
-                >
-                  Demanar Cotització
-                  <ArrowRight className="ml-2 w-5 h-5 text-white" />
-                </a>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Destinació Internacional:</label>
+                    <select
+                      value={rutaSimulada.desti}
+                      onChange={(e) => setRutaSimulada({ ...rutaSimulada, desti: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-medium focus:ring-2 focus:ring-pink-500 outline-hidden"
+                    >
+                      <option value="Xangai (Port de Yangshan)">Xangai (Port de Yangshan, Xina)</option>
+                      <option value="Rotterdam (Port / Hub Botlek)">Rotterdam (Països Baixos / Corredor Nord)</option>
+                      <option value="Nova York (Port de NY & NJ)">Nova York / Nova Jersey (EUA)</option>
+                      <option value="Hamburg (Terminal Waltershof)">Hamburg (Alemanya / Mar del Nord)</option>
+                    </select>
+                  </div>
 
-                <a
-                  href="#serveis"
-                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-purple-900/40 text-purple-200 font-semibold text-base border border-purple-500/40 backdrop-blur-xs hover:bg-purple-800/50 hover:border-pink-400/60 transition-all"
-                >
-                  Explorar Catàleg Tècnic
-                </a>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Mode de Transport Recomanat:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRutaSimulada({ ...rutaSimulada, mode: 'maritim-fcl' })}
+                        className={`py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                          rutaSimulada.mode === 'maritim-fcl'
+                            ? 'bg-purple-900 border-pink-500 text-white shadow-sm'
+                            : 'bg-slate-950 border-purple-900 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Ship className="w-3.5 h-3.5" />
+                        Marítim FCL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRutaSimulada({ ...rutaSimulada, mode: 'terrestre-frigo' })}
+                        className={`py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                          rutaSimulada.mode === 'terrestre-frigo'
+                            ? 'bg-purple-900 border-pink-500 text-white shadow-sm'
+                            : 'bg-slate-950 border-purple-900 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Truck className="w-3.5 h-3.5" />
+                        Carretera FTL
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Resultat de l'estimació de ruta */}
+                  <div className="p-4 rounded-xl bg-purple-950/60 border border-purple-800/80 space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Temps de trànsit estimat (ETA):</span>
+                      <strong className="text-pink-300 font-mono text-sm">{estimacioActual.temps}</strong>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Distància operativa:</span>
+                      <span className="text-white font-mono">{estimacioActual.dist}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Incoterm® 2020 habitual:</span>
+                      <span className="text-fuchsia-300 font-semibold">{estimacioActual.incoterm}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Empremta ecològica:</span>
+                      <span className="text-emerald-400 font-medium">{estimacioActual.reduccio}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleApplySimulatedRoute}
+                    className="w-full py-2.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-pink-950/50"
+                  >
+                    Carregar aquesta ruta al formulari de cotització
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
-              {/* Indicadors de Confiança Operativa */}
-              <div className="mt-12 pt-8 border-t border-purple-900 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div>
-                  <p className="text-purple-300">Règim Operatiu</p>
-                  <p className="text-sm font-bold text-pink-400 mt-0.5">OEA-F Autoritzat</p>
-                </div>
-                <div>
-                  <p className="text-purple-300">Cadena de Fred</p>
-                  <p className="text-sm font-bold text-fuchsia-300 mt-0.5">Certificat ATP / FRC</p>
-                </div>
-                <div>
-                  <p className="text-purple-300">Emmagatzematge</p>
-                  <p className="text-sm font-bold text-white mt-0.5">45.000 m² WMS ZAL</p>
-                </div>
-                <div>
-                  <p className="text-purple-300">Traçabilitat</p>
-                  <p className="text-sm font-bold text-pink-400 mt-0.5">GPS / EN 12830 24/7</p>
-                </div>
-              </div>
             </div>
           </div>
         </section>
 
         {/* ======================================================== */}
-        {/* 3. CATÀLEG DE SERVEIS / ELS 3 PRODUCTES LOGÍSTICS        */}
+        {/* 3. CATÀLEG DE SERVEIS: 3 PRODUCTES LOGÍSTICS CONCRETS    */}
         {/* ======================================================== */}
-        <section id="serveis" className="py-24 bg-white border-b border-purple-100">
+        <section id="serveis" className="py-24 bg-slate-900 text-slate-100 border-t border-b border-purple-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-14">
-              <span className="text-xs font-bold uppercase tracking-widest text-purple-700 mb-2 block">
-                Catàleg Tècnic Superior
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Productes Logístics i Serveis Específics
-              </h2>
-              <p className="mt-4 text-base text-slate-600 leading-relaxed">
-                Fitxes tècniques desenvolupades d'acord amb els estàndards oficials de comerç exterior, codis aranzelaris, capacitats volumètriques, Incoterms® 2020 i normatives ATP / duaneres.
-              </p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
+                  <span>Catàleg Tècnic Oficial</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Especificacions Tècniques de Comerç Internacional</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  Productes i Serveis de Transport Especialitzat
+                </h2>
+                <p className="mt-3 text-slate-400 text-sm max-w-2xl leading-relaxed">
+                  Consulteu les tres unitats de negoci logístic d'Adam Transport. Dades tècniques completes segons normatives internacionals ISO, ATP i OEA.
+                </p>
+              </div>
 
-              {/* Filtres per Categoria */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
+              {/* Botons de filtre interactius */}
+              <div className="flex flex-wrap gap-1.5 p-1 bg-slate-950 rounded-xl border border-purple-900/70 self-start md:self-auto">
                 <button
                   type="button"
                   onClick={() => setActiveCategory('tots')}
-                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     activeCategory === 'tots'
-                      ? 'bg-purple-900 text-pink-300 shadow-sm border border-purple-800'
-                      : 'bg-purple-100/70 text-purple-900 hover:bg-purple-200'
+                      ? 'bg-purple-900 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Tots els productes (3)
+                  Tots els Serveis (3)
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveCategory('maritim')}
-                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     activeCategory === 'maritim'
-                      ? 'bg-purple-900 text-pink-300 shadow-sm border border-purple-800'
-                      : 'bg-purple-100/70 text-purple-900 hover:bg-purple-200'
+                      ? 'bg-purple-900 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Transport Marítim FCL
+                  Marítim FCL
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveCategory('terrestre')}
-                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     activeCategory === 'terrestre'
-                      ? 'bg-purple-900 text-pink-300 shadow-sm border border-purple-800'
-                      : 'bg-purple-100/70 text-purple-900 hover:bg-purple-200'
+                      ? 'bg-purple-900 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Transport Terrestre Frigorífic FTL
+                  Terrestre Frigorífic
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveCategory('magatzem')}
-                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     activeCategory === 'magatzem'
-                      ? 'bg-purple-900 text-pink-300 shadow-sm border border-purple-800'
-                      : 'bg-purple-100/70 text-purple-900 hover:bg-purple-200'
+                      ? 'bg-purple-900 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Magatzem WMS & Cross-Docking
+                  Magatzem WMS ZAL
                 </button>
               </div>
             </div>
 
-            {/* Graella dels 3 Productes Logístics Concrets */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Graella dels 3 Productes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProducts.map((prod) => (
                 <div
                   key={prod.id}
-                  className="group bg-white rounded-2xl overflow-hidden border border-purple-200/90 hover:border-pink-400 shadow-sm hover:shadow-xl hover:shadow-pink-500/10 transition-all duration-300 flex flex-col justify-between"
+                  className="group bg-slate-950 rounded-2xl overflow-hidden border border-purple-900/60 hover:border-pink-500/80 transition-all duration-300 flex flex-col justify-between shadow-xl shadow-purple-950/20"
                 >
                   <div>
-                    {/* Contenidor d'Imatge Real */}
+                    {/* Contenidor de Fotografia Real Local amb Fallback */}
                     <div className="relative h-60 overflow-hidden bg-purple-950">
                       <img
                         src={prod.imatge}
@@ -539,89 +713,84 @@ export default function App() {
                         }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-purple-950/80 via-transparent to-transparent"></div>
-                      
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+
                       {/* Referència Interna i Codi */}
-                      <div className="absolute top-3 left-3 bg-purple-950/90 text-pink-300 backdrop-blur-xs font-mono text-[11px] font-bold px-2.5 py-1 rounded-md border border-pink-400/30">
+                      <div className="absolute top-3 left-3 bg-slate-950/90 text-pink-300 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md border border-pink-400/30">
                         {prod.refInterna}
                       </div>
 
                       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                        <span className="font-mono text-purple-200 text-[11px] bg-purple-950/85 px-2 py-0.5 rounded border border-purple-800">
+                        <span className="font-mono text-slate-300 text-[11px] bg-slate-900/90 px-2 py-0.5 rounded border border-purple-900">
                           {prod.codiTecnic.split(' ')[0]}
                         </span>
                         <span className="bg-pink-600 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded">
-                          {prod.categoria === 'maritim' ? 'Marítim FCL' : prod.categoria === 'terrestre' ? 'Terrestre FTL' : 'Hub ZAL'}
+                          {prod.categoria === 'maritim' ? 'Marítim FCL' : prod.categoria === 'terrestre' ? 'Carretera ATP' : 'Hub ZAL 45k'}
                         </span>
                       </div>
                     </div>
 
-                    {/* Cos de la Targeta */}
                     <div className="p-6">
-                      <h3 className="text-lg font-bold text-slate-900 leading-snug mb-3 group-hover:text-purple-800 transition-colors">
+                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-pink-400 transition-colors leading-snug">
                         {prod.nomTecnic}
                       </h3>
 
-                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-5">
+                      <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed mb-4">
                         {prod.descripcioCompleta}
                       </p>
 
-                      {/* Taula de Dades Tècniques Clau */}
-                      <div className="bg-purple-50/60 rounded-xl p-4 border border-purple-100 space-y-2.5 text-xs mb-5">
-                        <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
-                          <span className="text-purple-900/70 font-medium">Volum útil / CBM:</span>
-                          <span className="font-semibold text-purple-950 text-right">{prod.especificacions.volum}</span>
+                      {/* Especificacions Tècniques Rúbrica */}
+                      <div className="bg-slate-900/90 rounded-xl p-3.5 border border-purple-900/50 space-y-1.5 text-xs mb-4">
+                        <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
+                          <span className="text-slate-400">Volum / Capacitat:</span>
+                          <span className="font-semibold text-white">{prod.especificacions.volum.split('/')[0]}</span>
                         </div>
-                        <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
-                          <span className="text-purple-900/70 font-medium">Càrrega útil (Payload):</span>
-                          <span className="font-semibold text-purple-950 text-right">{prod.especificacions.payload.split('(')[0]}</span>
+                        <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
+                          <span className="text-slate-400">Càrrega Màxima (Payload):</span>
+                          <span className="font-semibold text-pink-300">{prod.especificacions.payload.split(' ')[0]} kg</span>
                         </div>
-                        <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
-                          <span className="text-purple-900/70 font-medium">Capacitat d'estiba:</span>
-                          <span className="font-semibold text-purple-950 text-right">{prod.especificacions.capacitatPalets}</span>
+                        <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
+                          <span className="text-slate-400">Capacitat Palets:</span>
+                          <span className="font-semibold text-white">{prod.especificacions.capacitatPalets.split('(')[0]}</span>
                         </div>
                         {prod.especificacions.temperatura && (
-                          <div className="flex items-start justify-between gap-2 border-b border-purple-100 pb-2">
-                            <span className="text-purple-900/70 font-medium">Control Tèrmic:</span>
-                            <span className="font-semibold text-pink-700 text-right">{prod.especificacions.temperatura.split('amb')[0]}</span>
+                          <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
+                            <span className="text-slate-400">Rang Tèrmic ATP:</span>
+                            <span className="font-semibold text-fuchsia-300">{prod.especificacions.temperatura.split('amb')[0]}</span>
                           </div>
                         )}
-                        <div className="flex items-start justify-between gap-2 pt-0.5">
-                          <span className="text-purple-900/70 font-medium">Marc Normatiu:</span>
-                          <span className="font-semibold text-purple-900 text-right text-[11px]">{prod.normativa.split('/')[0]}</span>
+                        <div className="flex justify-between text-slate-300 pt-0.5">
+                          <span className="text-slate-400">Marc Normatiu:</span>
+                          <span className="font-semibold text-white truncate max-w-[170px]">{prod.normativa.split('/')[0]}</span>
                         </div>
                       </div>
 
-                      {/* Llista d'avantatges */}
-                      <div className="space-y-1.5 mb-6 text-xs text-slate-600">
+                      <div className="space-y-1 text-xs text-slate-300 mb-2">
                         {prod.avantatges.slice(0, 2).map((av, idx) => (
-                          <div key={idx} className="flex items-start gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-pink-600 shrink-0 mt-0.5" />
-                            <span>{av}</span>
+                          <div key={idx} className="flex items-start gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-pink-400 shrink-0 mt-0.5" />
+                            <span className="text-slate-300">{av}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  {/* Accions de la Targeta */}
-                  <div className="p-6 pt-0 flex items-center gap-3">
+                  <div className="p-6 pt-0 flex gap-2">
                     <button
                       type="button"
                       onClick={() => setSelectedProduct(prod)}
-                      className="flex-1 py-2.5 px-3 rounded-lg bg-purple-50 border border-purple-200 text-purple-950 text-xs font-semibold hover:bg-purple-100 transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-2.5 px-3 rounded-lg bg-purple-900/40 hover:bg-purple-900/70 border border-purple-800 text-purple-200 text-xs font-semibold transition-colors cursor-pointer text-center"
                     >
-                      <FileText className="w-3.5 h-3.5 text-purple-700" />
-                      Fitxa Tècnica
+                      Veure Fitxa Tècnica
                     </button>
-                    
                     <button
                       type="button"
                       onClick={() => handlePreselectService(prod.refInterna)}
-                      className="flex-1 py-2.5 px-3 rounded-lg bg-gradient-to-r from-purple-800 to-pink-700 text-white text-xs font-semibold hover:opacity-90 transition-opacity inline-flex items-center justify-center gap-1 cursor-pointer"
+                      className="py-2.5 px-3 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center gap-1 shadow-sm"
                     >
                       Cotitzar
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-3.5 h-3.5 text-white" />
                     </button>
                   </div>
                 </div>
@@ -631,43 +800,232 @@ export default function App() {
         </section>
 
         {/* ======================================================== */}
-        {/* 4. QUI SOM / EMPRESA                                     */}
+        {/* 4. SECCIÓ D'EINES TÈCNIQUES I MATRIU INCOTERMS® 2020     */}
         {/* ======================================================== */}
-        <section id="quisom" className="py-20 bg-purple-100/40 border-b border-purple-200">
+        <section id="eines" className="py-24 bg-slate-950 text-slate-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-pink-700 mb-2 block">
-                  Trajectòria i Compromís Tècnic
-                </span>
-                <h3 className="text-3xl font-extrabold text-slate-900 sm:text-4xl mb-6">
-                  Més de 15 anys connectant terminals portuàries, flotes i indústries
-                </h3>
-                <p className="text-slate-600 mb-4 leading-relaxed text-sm sm:text-base">
-                  Fundada amb la missió de simplificar cadenes de subministrament d'alta complexitat tècnica, <strong className="text-slate-900">ADAM TRANSPORT AND LOGISTIC</strong> combina una infraestructura física capdavantera amb protocols digitals de control d'itineraris en temps real i certificació com a Operador Econòmic Autoritzat.
-                </p>
-                <p className="text-slate-600 leading-relaxed text-sm sm:text-base mb-6">
-                  El nostre equip està conformat per tècnics superiors en transport i comerç internacional, despatxants de duanes col·legiats i conductors professionals formats en convenis ATP, ADR i bones pràctiques de distribució (GDP).
+            <div className="max-w-3xl mb-12">
+              <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
+                <span>Eines Tècniques per a Professionals</span>
+                <span aria-hidden="true">·</span>
+                <span>Comerç Internacional</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Matriu Incoterms® 2020 & Calculadora de Cubatge
+              </h2>
+              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
+                Guia operativa de transmissió de riscos, obligacions duaneres segons les regles de la Cambra de Comerç Internacional (ICC) i càlcul volumètric d'estiba.
+              </p>
+            </div>
+
+            {/* Pestanyes de les Eines */}
+            <div className="flex gap-3 border-b border-purple-900/60 pb-3 mb-8 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setActiveToolTab('simulador')}
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
+                  activeToolTab === 'simulador' ? 'bg-purple-900 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Compass className="w-4 h-4 text-pink-400" />
+                Matriu Incoterms® 2020 (Risc & Duanes)
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveToolTab('cubatge')}
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
+                  activeToolTab === 'cubatge' ? 'bg-purple-900 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Calculator className="w-4 h-4 text-pink-400" />
+                Calculadora Volumètrica de Càrrega
+              </button>
+            </div>
+
+            {activeToolTab === 'simulador' && (
+              <div className="overflow-x-auto bg-slate-900 rounded-2xl border border-purple-900/60 p-6 shadow-xl">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="text-[11px] uppercase tracking-wider text-pink-400 border-b border-purple-900/80">
+                    <tr>
+                      <th className="py-3 px-4 font-bold">Incoterm® 2020</th>
+                      <th className="py-3 px-4 font-bold">Lloc de Lliurament</th>
+                      <th className="py-3 px-4 font-bold">Transmissió del Risc</th>
+                      <th className="py-3 px-4 font-bold">Flet Internacional</th>
+                      <th className="py-3 px-4 font-bold">Despatx Duaner</th>
+                      <th className="py-3 px-4 font-bold">Aplicabilitat</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-purple-950">
+                    <tr className="hover:bg-purple-950/40">
+                      <td className="py-3.5 px-4 font-bold text-white font-mono">EXW (Ex Works)</td>
+                      <td className="py-3.5 px-4">Instal·lacions del venedor</td>
+                      <td className="py-3.5 px-4 text-amber-300">En posar mercaderia a disposició</td>
+                      <td className="py-3.5 px-4 text-slate-400">Comprador</td>
+                      <td className="py-3.5 px-4 text-slate-400">Comprador (Exp i Imp)</td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-200">Multimodal</td>
+                    </tr>
+                    <tr className="hover:bg-purple-950/40">
+                      <td className="py-3.5 px-4 font-bold text-white font-mono">FOB (Free On Board)</td>
+                      <td className="py-3.5 px-4">A bord del vaixell al port de càrrega</td>
+                      <td className="py-3.5 px-4 text-emerald-300">Un cop a bord del vaixell</td>
+                      <td className="py-3.5 px-4 text-slate-400">Comprador</td>
+                      <td className="py-3.5 px-4 text-fuchsia-300">Venedor (DUA Exp) / Comprador (Imp)</td>
+                      <td className="py-3.5 px-4 font-semibold text-pink-400">Marítim Exclusiu</td>
+                    </tr>
+                    <tr className="hover:bg-purple-950/40 bg-purple-950/20">
+                      <td className="py-3.5 px-4 font-bold text-white font-mono">CIF (Cost, Insurance, Freight)</td>
+                      <td className="py-3.5 px-4">A bord del vaixell (Port d'origen)</td>
+                      <td className="py-3.5 px-4 text-emerald-300">A bord del vaixell a origen</td>
+                      <td className="py-3.5 px-4 text-pink-300">Venedor (paga flet i pòlissa)</td>
+                      <td className="py-3.5 px-4 text-fuchsia-300">Venedor (DUA Exp) / Comprador (Imp)</td>
+                      <td className="py-3.5 px-4 font-semibold text-pink-400">Marítim FCL / LCL</td>
+                    </tr>
+                    <tr className="hover:bg-purple-950/40">
+                      <td className="py-3.5 px-4 font-bold text-white font-mono">DAP (Delivered at Place)</td>
+                      <td className="py-3.5 px-4">Lloc convingut de destinació</td>
+                      <td className="py-3.5 px-4 text-pink-300">En arribar al destí sense descarregar</td>
+                      <td className="py-3.5 px-4 text-pink-300">Venedor</td>
+                      <td className="py-3.5 px-4 text-slate-300">Venedor (Exp) / Comprador (Imp)</td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-200">Carretera FTL / Multimodal</td>
+                    </tr>
+                    <tr className="hover:bg-purple-950/40">
+                      <td className="py-3.5 px-4 font-bold text-white font-mono">DDP (Delivered Duty Paid)</td>
+                      <td className="py-3.5 px-4">Magatzem del client amb aranzels pagats</td>
+                      <td className="py-3.5 px-4 text-pink-300">A la recepció de destí</td>
+                      <td className="py-3.5 px-4 text-pink-300">Venedor (Tot inclòs)</td>
+                      <td className="py-3.5 px-4 text-pink-300">Venedor (Tots els aranzels i IVA)</td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-200">Tots els modes</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeToolTab === 'cubatge' && (
+              <div className="bg-slate-900 rounded-2xl border border-purple-900/60 p-6 sm:p-8 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-4 text-xs">
+                  <h3 className="text-base font-bold text-white">Calculadora Ràpida d'Estiba i Volum (m³)</h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    Ajusteu el nombre de palets i alçada per calcular la capacitat cúbica necessària i saber si l'expedició requereix un contenidor High Cube o un tràiler FTL.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">Nombre de Palets:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="66"
+                        value={calcPalets}
+                        onChange={(e) => setCalcPalets(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-mono text-sm focus:ring-2 focus:ring-pink-500 outline-hidden"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">Tipus de Palet:</label>
+                      <select
+                        value={calcTipus}
+                        onChange={(e) => setCalcTipus(e.target.value as 'euro' | 'iso')}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-medium text-xs focus:ring-2 focus:ring-pink-500 outline-hidden"
+                      >
+                        <option value="euro">Europalet (1.200 × 800 mm)</option>
+                        <option value="iso">Americà / ISO (1.200 × 1.000 mm)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Alçada de la càrrega paletitzada (metres): {calcAlcada} m</label>
+                    <input
+                      type="range"
+                      min="0.8"
+                      max="2.5"
+                      step="0.1"
+                      value={calcAlcada}
+                      onChange={(e) => setCalcAlcada(parseFloat(e.target.value))}
+                      className="w-full accent-pink-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Caixa de Resultat de Cubatge */}
+                <div className="p-6 rounded-xl bg-purple-950/60 border border-purple-800/80 space-y-4">
+                  <div>
+                    <span className="text-xs text-slate-400 block">Volum total calculat:</span>
+                    <span className="text-3xl font-extrabold text-pink-300 font-mono">{volumTotalEstimats} m³ (CBM)</span>
+                  </div>
+
+                  <div className="pt-3 border-t border-purple-900/80">
+                    <span className="text-xs text-slate-400 block">Unitat de transport recomanada:</span>
+                    <strong className="text-sm font-bold text-white block mt-0.5">{equipRecomanat}</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        observacions: `Càlcul de cubatge: ${calcPalets} palets (${calcTipus === 'euro' ? 'Europalet' : 'ISO'}), alçada ${calcAlcada}m. Volum estimat: ${volumTotalEstimats} m³. Recomanació: ${equipRecomanat}.`,
+                      }));
+                      const element = document.getElementById('contacte');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="w-full py-2.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  >
+                    Traslladar càlcul de volum al formulari
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ======================================================== */}
+        {/* 5. SECCIÓ QUI SOM: PLATAFORMA OPERATIVA I CERTIFICACIONS */}
+        {/* ======================================================== */}
+        <section id="quisom" className="py-24 bg-slate-900 text-slate-100 border-t border-purple-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="lg:col-span-6 space-y-6">
+                <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider">
+                  <span>Operador Logístic Integral</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Barcelona Hub ZAL</span>
+                </div>
+
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  Infraestructura portuària i gestió duanera d'alta precisió.
+                </h2>
+
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Des de la nostra seu central al Moll Sud del Port de Barcelona i la plataforma ZAL Prat, connectem els principals corredors mundials combinant flexibilitat terrestre amb el gran tonatge de les rutes transoceàniques.
                 </p>
 
-                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-purple-200">
-                  <div className="bg-white p-3.5 rounded-xl border border-purple-200">
-                    <p className="text-2xl sm:text-3xl font-black text-purple-950">+40</p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">Països connectats</p>
+                <div className="grid grid-cols-2 gap-4 text-xs pt-2">
+                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
+                    <strong className="text-lg font-bold text-pink-400 block font-mono">45.000 m²</strong>
+                    <span className="text-slate-400">Nau d'alta rotació amb 42 molls electrohidràulics.</span>
                   </div>
-                  <div className="bg-white p-3.5 rounded-xl border border-purple-200">
-                    <p className="text-2xl sm:text-3xl font-black text-pink-600">99.6%</p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">Puntualitat d'arribada</p>
+                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
+                    <strong className="text-lg font-bold text-white block font-mono">ES-OEA-004128</strong>
+                    <span className="text-slate-400">Certificat OEA-F de duanes i seguretat europea.</span>
                   </div>
-                  <div className="bg-white p-3.5 rounded-xl border border-purple-200">
-                    <p className="text-2xl sm:text-3xl font-black text-fuchsia-700">24/7</p>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">Torre de control telemàtic</p>
+                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
+                    <strong className="text-lg font-bold text-fuchsia-300 block font-mono">120+ Caps</strong>
+                    <span className="text-slate-400">Flota pròpia Euro 6e amb termògraf SLXi 24/7.</span>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
+                    <strong className="text-lg font-bold text-emerald-400 block font-mono">IFS & GDP</strong>
+                    <span className="text-slate-400">Homologació per a farmacèutica i agroalimentació.</span>
                   </div>
                 </div>
               </div>
 
-              <div className="relative">
-                <div className="aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden shadow-xl border-4 border-purple-200 bg-purple-950">
+              <div className="lg:col-span-6 relative">
+                <div className="aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden shadow-2xl border border-purple-800/80 bg-purple-950">
                   <img
                     src="/images/port-quisom.jpg"
                     alt="Grues portuàries Ship-to-Shore i moll de càrrega comercial"
@@ -683,107 +1041,89 @@ export default function App() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute -bottom-6 -left-6 bg-purple-950 text-white p-5 rounded-xl shadow-xl hidden sm:block max-w-xs border border-pink-500/30">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <ShieldCheck className="w-5 h-5 text-pink-400" />
-                    <p className="text-sm font-semibold text-white">Certificacions Internacionals</p>
-                  </div>
-                  <p className="text-xs text-purple-200 leading-normal">
-                    ISO 9001:2015, GDP farmacèutic, classe ATP/FRC per a peribles i motors de flota d'emissions Euro 6e.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ======================================================== */}
-        {/* 5. BLOG / CONEIXEMENT SECTORIAL                          */}
+        {/* 6. BLOG LOGÍSTIC: ANÀLISI I CRITERIS TÈCNICS             */}
         {/* ======================================================== */}
-        <section id="blog" className="py-20 bg-white border-b border-purple-100">
+        <section id="blog" className="py-24 bg-slate-950 text-slate-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-700 mb-2 block">
-                  Actualitat Sectorial & Comerç Exterior
-                </span>
-                <p className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Notícies i Coneixement Logístic
-                </p>
+            <div className="max-w-3xl mb-12">
+              <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
+                <span>Publicacions & Anàlisi Tècnica</span>
+                <span aria-hidden="true">·</span>
+                <span>Actualitat Logística</span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-2 md:mt-0 max-w-md">
-                Guies i anàlisis elaborades per especialistes en dret duaner, incoterms i enginyeria de transport
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Coneixement Tècnic de Transport i Comerç Exterior
+              </h2>
+              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
+                Articles formatius redactats des de la perspectiva de la gestió del transport internacional i operacions de despatx duaner.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Article 1 */}
-              <article className="p-6 rounded-2xl border border-purple-200 hover:border-pink-400 bg-purple-50/30 transition-all flex flex-col justify-between">
+              <article className="p-6 rounded-2xl border border-purple-900/60 bg-slate-900/80 hover:border-pink-500/60 transition-all flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-                    <span className="bg-pink-100 text-pink-900 font-bold px-2 py-0.5 rounded text-[11px]">
-                      Cadena de Fred
-                    </span>
-                    <span>·</span>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                    <span className="text-fuchsia-400 font-semibold">Cadena de Fred</span>
+                    <span aria-hidden="true">·</span>
                     <span>Lectura: 5 min</span>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug">
-                    Normativa europea ATP i registre continu EN 12830 en càrregues peribles
+                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                    Normativa ATP Classe FRC i telemetria en trànsits internacionals
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Com s'aplica el protocol de termografia digital amb calibratge oficial per mantenir inalterada la cadena de fred farmacèutica i càrnia en trànsit paneuropeu.
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Comprovació del coeficient K d'aïllament isotèrmic i registre obligatori de temperatures segons la norma EN 12830 per a peribles.
                   </p>
                 </div>
-                <div className="pt-4 mt-4 border-t border-purple-100">
-                  <span className="text-xs font-semibold text-purple-700 hover:text-pink-600 inline-flex items-center gap-1 transition-colors">
+                <div className="pt-4 mt-4 border-t border-purple-900/50">
+                  <span className="text-xs font-semibold text-pink-400 inline-flex items-center gap-1">
                     Llegir anàlisi tècnica <ChevronRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
               </article>
 
-              {/* Article 2 */}
-              <article className="p-6 rounded-2xl border border-purple-200 hover:border-pink-400 bg-purple-50/30 transition-all flex flex-col justify-between">
+              <article className="p-6 rounded-2xl border border-purple-900/60 bg-slate-900/80 hover:border-pink-500/60 transition-all flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-                    <span className="bg-fuchsia-100 text-fuchsia-900 font-bold px-2 py-0.5 rounded text-[11px]">
-                      Comerç Marítim
-                    </span>
-                    <span>·</span>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                    <span className="text-fuchsia-400 font-semibold">Comerç Marítim</span>
+                    <span aria-hidden="true">·</span>
                     <span>Lectura: 6 min</span>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug">
+                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
                     Optimització de rutes en terminals de contenidors del Mediterrani
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Estratègies per evitar demores i despeses d'ocupació (demurrage & detention) aprofitant corredors ferroviaris intermodals i magatzems de regulació DA.
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Estratègies per evitar despeses d'ocupació i demora (demurrage & detention) aprofitant corredors ferroviaris i dipòsits duaners públics DA.
                   </p>
                 </div>
-                <div className="pt-4 mt-4 border-t border-purple-100">
-                  <span className="text-xs font-semibold text-purple-700 hover:text-pink-600 inline-flex items-center gap-1 transition-colors">
+                <div className="pt-4 mt-4 border-t border-purple-900/50">
+                  <span className="text-xs font-semibold text-pink-400 inline-flex items-center gap-1">
                     Llegir anàlisi tècnica <ChevronRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
               </article>
 
-              {/* Article 3 */}
-              <article className="p-6 rounded-2xl border border-purple-200 hover:border-pink-400 bg-purple-50/30 transition-all flex flex-col justify-between">
+              <article className="p-6 rounded-2xl border border-purple-900/60 bg-slate-900/80 hover:border-pink-500/60 transition-all flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-                    <span className="bg-purple-100 text-purple-900 font-bold px-2 py-0.5 rounded text-[11px]">
-                      Incoterms® 2020
-                    </span>
-                    <span>·</span>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                    <span className="text-fuchsia-400 font-semibold">Duanes & OEA</span>
+                    <span aria-hidden="true">·</span>
                     <span>Lectura: 4 min</span>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug">
-                    Transmissió del risc i despatx duaner: de FOB a DDP pas a pas
+                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                    Despatx duaner simplificat i assignació de circuit verd amb estatus OEA
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Revisió dels punts crítics de lliurament segons la Cambra de Comerç Internacional (ICC) i responsabilitat sobre el DUA i l'IVA a la importació.
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Procediments d'enllaç telemàtic amb l'Agència Tributària, garantia global de deute duaner i gestió de mercaderies sota DUA.
                   </p>
                 </div>
-                <div className="pt-4 mt-4 border-t border-purple-100">
-                  <span className="text-xs font-semibold text-purple-700 hover:text-pink-600 inline-flex items-center gap-1 transition-colors">
+                <div className="pt-4 mt-4 border-t border-purple-900/50">
+                  <span className="text-xs font-semibold text-pink-400 inline-flex items-center gap-1">
                     Llegir anàlisi tècnica <ChevronRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
@@ -793,90 +1133,90 @@ export default function App() {
         </section>
 
         {/* ======================================================== */}
-        {/* 6. CONTACTE & FORMULARI (Morat Profund & Rosa)           */}
+        {/* 7. SECCIÓ CONTACTE & FORMULARI (FORMSPREE INTEGRAT)      */}
         {/* ======================================================== */}
-        <section id="contacte" className="py-24 bg-purple-950 text-purple-100 relative">
+        <section id="contacte" className="py-24 bg-slate-900 text-slate-100 border-t border-purple-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
               
               {/* Dades de Contacte Físiques */}
               <div className="lg:col-span-5 space-y-8">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-pink-400 mb-3 block">
+                  <span className="text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-2 block">
                     Canal Directe d'Operacions
                   </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                     Coordina la teva operació logística
                   </h2>
-                  <p className="mt-4 text-purple-200 text-sm leading-relaxed">
+                  <p className="mt-3 text-slate-400 text-sm leading-relaxed">
                     El nostre equip calcularà la teva cotització segons volum, pes brut, distància i requeriments específics de manipulació.
                   </p>
                 </div>
 
                 <div className="space-y-6">
-                  {/* Adreça Física Real */}
+                  {/* Adreça Física */}
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-purple-900/60 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-white">Seu Operativa i Terminal</h4>
-                      <p className="text-xs text-purple-200 mt-1">
+                      <h4 className="text-sm font-semibold text-white">Seu Operativa i Terminal Portuària</h4>
+                      <p className="text-xs text-slate-300 mt-0.5">
                         Carrer del Port, Moll Sud, Nau 14-B<br />
                         08040 Barcelona, Catalunya, Espanya
                       </p>
-                      <span className="text-[11px] text-pink-400 font-mono mt-0.5 inline-block">
-                        Coordenades: 41.3486° N, 2.1465° E
+                      <span className="text-[11px] text-fuchsia-400 font-mono mt-0.5 inline-block">
+                        Coordenades GPS: 41.3486° N, 2.1465° E
                       </span>
                     </div>
                   </div>
 
                   {/* Telèfons */}
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-purple-900/60 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
                       <Phone className="w-5 h-5" />
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-white">Centraleta Directa</h4>
-                      <p className="text-xs text-purple-200 mt-1 font-mono">
-                        +34 932 45 88 00 (Oficines Centrals)
+                      <p className="text-xs text-slate-300 mt-0.5 font-mono">
+                        +34 932 45 88 00 (Oficines i Despatx de Duanes)
                       </p>
                       <p className="text-xs text-pink-400 font-mono mt-0.5">
-                        Urgències de Càrrega: +34 900 10 20 30 (Servei 24/7)
+                        Urgències de Càrrega i Trànsit: +34 900 10 20 30 (24h)
                       </p>
                     </div>
                   </div>
 
-                  {/* Correu Electrònic (NOMÉS adam043@vidalibarraquer.net) */}
+                  {/* Correu Acadèmic Exclusiu */}
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-purple-900/60 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-white">Correu Directe de Contacte</h4>
+                      <h4 className="text-sm font-semibold text-white">Bústia Directa de Cotitzacions</h4>
                       <a
                         href="mailto:adam043@vidalibarraquer.net?subject=Sol%C2%B7licitud%20de%20Pressupost%20-%20Adam%20Transport"
-                        className="text-xs text-pink-400 font-mono font-bold hover:underline block mt-1 text-sm"
+                        className="text-sm text-pink-400 font-mono font-bold hover:underline block mt-0.5"
                       >
                         adam043@vidalibarraquer.net
                       </a>
-                      <span className="text-[11px] text-purple-300 font-medium block mt-0.5">
-                        (Bústia directa exclusiva per a cotitzacions i consultes logístiques)
+                      <span className="text-[11px] text-slate-400 block mt-0.5">
+                        (Bústia directa per a cotitzacions i consultes logístiques)
                       </span>
                     </div>
                   </div>
 
                   {/* Horaris */}
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-purple-900/60 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
                       <Clock className="w-5 h-5" />
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-white">Horaris d'Atenció i Despatx</h4>
-                      <p className="text-xs text-purple-200 mt-1">
+                      <p className="text-xs text-slate-300 mt-0.5">
                         Dilluns a Divendres: 08:00h - 19:30h (Duanes & Gestió)
                       </p>
-                      <p className="text-xs text-purple-400">
+                      <p className="text-xs text-slate-400">
                         Molls de recepció i trànsit marítim operatius 24/7
                       </p>
                     </div>
@@ -884,35 +1224,26 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Formulari Interactiu de Cotització en Morat i Rosa */}
-              <div className="lg:col-span-7 bg-purple-900/60 backdrop-blur-md text-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-purple-800">
+              {/* Formulari Interactiu de Cotització */}
+              <div className="lg:col-span-7 bg-slate-950 rounded-2xl shadow-2xl border border-purple-900/80 p-8 sm:p-10">
                 <h3 className="text-2xl font-bold text-white mb-2">
                   Sol·licitud de Pressupost i Cotització de Serveis
                 </h3>
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pink-500/15 border border-pink-500/40 text-pink-300 text-[11px] font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-ping"></span>
-                    Formspree actiu (xvkkyjgo) &rarr; adam043@vidalibarraquer.net
-                  </span>
-                  <span className="text-[11px] text-purple-300">
-                    Recepció directa a la teva bústia acadèmica
-                  </span>
-                </div>
-                <p className="text-xs text-purple-200 mb-6">
-                  Omple les dades de la teva operació de transport o emmagatzematge. En prémer enviar, les teves dades s'envien automàticament mitjançant el servei de formulari <strong>Formspree</strong> directament al correu <strong>adam043@vidalibarraquer.net</strong>.
+                <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                  Omple les dades de la teva expedició. Les teves dades es trameten automàticament a través de <strong>Formspree</strong> directament a la bústia acadèmica <strong>adam043@vidalibarraquer.net</strong>.
                 </p>
 
                 {formSubmitted ? (
-                  <div className="bg-purple-950/90 border border-pink-500/40 rounded-xl p-6 text-center animate-fadeIn space-y-4">
+                  <div className="bg-purple-950/70 border border-pink-500/50 rounded-xl p-6 text-center animate-fadeIn space-y-4">
                     <CheckCircle2 className="w-12 h-12 text-pink-400 mx-auto" />
                     <div>
-                      <h4 className="text-lg font-bold text-pink-200 mb-1">
+                      <h4 className="text-lg font-bold text-white mb-1">
                         Sol·licitud Transmesa a Formspree amb Èxit!
                       </h4>
-                      <p className="text-xs text-purple-200 leading-relaxed max-w-md mx-auto">
-                        S'ha registrat la petició amb codi intern <strong className="text-pink-400">#COT-2026-{Math.floor(1000 + Math.random() * 9000)}</strong> per a l'empresa <strong>{formData.empresa || 'la teva entitat'}</strong> i s'ha transmès mitjançant <em>https://formspree.io/f/xvkkyjgo</em> directament a la bústia acadèmica:
+                      <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
+                        S'ha registrat la petició per a l'empresa <strong>{formData.empresa || 'la teva entitat'}</strong> i s'ha enviat directament a la bústia acadèmica:
                       </p>
-                      <div className="mt-2 inline-block bg-purple-900 px-3.5 py-1.5 rounded-lg border border-pink-500/50 text-pink-300 font-mono text-xs font-bold">
+                      <div className="mt-2 inline-block bg-slate-900 px-3.5 py-1.5 rounded-lg border border-pink-500/50 text-pink-300 font-mono text-xs font-bold">
                         adam043@vidalibarraquer.net
                       </div>
                     </div>
@@ -921,10 +1252,10 @@ export default function App() {
                       {lastMailtoUrl && (
                         <a
                           href={lastMailtoUrl}
-                          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-500 hover:to-fuchsia-500 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center justify-center gap-2 shadow-md shadow-pink-900/40"
+                          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center justify-center gap-2 shadow-md"
                         >
                           <Mail className="w-4 h-4" />
-                          Obrir correu per enviar a adam043@vidalibarraquer.net
+                          Obrir còpia en client de correu
                         </a>
                       )}
                       <button
@@ -936,14 +1267,15 @@ export default function App() {
                             empresa: '',
                             correu: '',
                             telefon: '',
-                            servei: 'ATL-FCL-40HC',
+                            servei: 'ATL-FCL-40HC-INT',
                             origen: '',
                             desti: '',
                             volum: '',
                             observacions: '',
+                            incoterm: 'CIF',
                           });
                         }}
-                        className="w-full sm:w-auto px-4 py-2.5 bg-purple-800 hover:bg-purple-700 text-purple-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                        className="w-full sm:w-auto px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                       >
                         Nova sol·licitud
                       </button>
@@ -955,7 +1287,7 @@ export default function App() {
                       <div>
                         <label
                           htmlFor="nom"
-                          className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                         >
                           Nom i Cognoms *
                         </label>
@@ -967,14 +1299,14 @@ export default function App() {
                           value={formData.nom}
                           onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                           placeholder="Ex. Marc Soler"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all placeholder:text-purple-400"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
                         <label
                           htmlFor="empresa"
-                          className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                         >
                           Empresa o Raó Social *
                         </label>
@@ -986,7 +1318,7 @@ export default function App() {
                           value={formData.empresa}
                           onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
                           placeholder="Ex. AgroExport Ibèrica S.L."
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all placeholder:text-purple-400"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -995,9 +1327,9 @@ export default function App() {
                       <div>
                         <label
                           htmlFor="correu"
-                          className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                         >
-                          Correu Corporatiu *
+                          Correu de Contacte *
                         </label>
                         <input
                           type="email"
@@ -1007,16 +1339,16 @@ export default function App() {
                           value={formData.correu}
                           onChange={(e) => setFormData({ ...formData, correu: e.target.value })}
                           placeholder="client@empresa.com"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all placeholder:text-purple-400"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
                         <label
                           htmlFor="telefon"
-                          className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                         >
-                          Telèfon de Contacte *
+                          Telèfon *
                         </label>
                         <input
                           type="tel"
@@ -1026,46 +1358,70 @@ export default function App() {
                           value={formData.telefon}
                           onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
                           placeholder="+34 600 000 000"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all placeholder:text-purple-400"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
                         />
                       </div>
                     </div>
 
-                    {/* Selecció del Producte Logístic Concret */}
-                    <div>
-                      <label
-                        htmlFor="servei"
-                        className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
-                      >
-                        Producte Logístic a Cotitzar *
-                      </label>
-                      <select
-                        id="servei"
-                        name="servei"
-                        value={formData.servei}
-                        onChange={(e) => setFormData({ ...formData, servei: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all"
-                      >
-                        <option value="ATL-FCL-40HC">
-                          [ATL-FCL-40HC-INT] Fletament Marítim FCL Contenidor 40' High Cube
-                        </option>
-                        <option value="ATL-REEF-EU33">
-                          [ATL-REEF-EU33-ATP] Transport Terrestre Frigorífic FTL (ATP Clau FRC)
-                        </option>
-                        <option value="ATL-WMS-HUB45">
-                          [ATL-WMS-HUB45-LOG] Magatzem Regulador WMS & Cross-Docking (ZAL 45k m²)
-                        </option>
-                        <option value="MULTIMODAL">
-                          Solució Multimodal Combinada Port + Carretera + Dipòsit Duaner
-                        </option>
-                      </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          htmlFor="servei"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
+                        >
+                          Producte Logístic *
+                        </label>
+                        <select
+                          id="servei"
+                          name="servei"
+                          value={formData.servei}
+                          onChange={(e) => setFormData({ ...formData, servei: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all"
+                        >
+                          <option value="ATL-FCL-40HC-INT">
+                            [ATL-FCL-40HC-INT] Fletament Marítim FCL Contenidor 40' High Cube
+                          </option>
+                          <option value="ATL-REEF-EU33-ATP">
+                            [ATL-REEF-EU33-ATP] Transport Terrestre Frigorífic FTL (ATP FRC)
+                          </option>
+                          <option value="ATL-WMS-HUB45-LOG">
+                            [ATL-WMS-HUB45-LOG] Magatzem Regulador WMS ZAL (45.000 m²)
+                          </option>
+                          <option value="MULTIMODAL-INTEGRAL">
+                            Solució Multimodal Combinada Port + Carretera + Dipòsit Duaner
+                          </option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="incoterm"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
+                        >
+                          Incoterm® 2020 Preferit
+                        </label>
+                        <select
+                          id="incoterm"
+                          name="incoterm"
+                          value={formData.incoterm}
+                          onChange={(e) => setFormData({ ...formData, incoterm: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all font-mono"
+                        >
+                          <option value="CIF">CIF - Cost, Insurance and Freight</option>
+                          <option value="FOB">FOB - Free On Board</option>
+                          <option value="DAP">DAP - Delivered at Place</option>
+                          <option value="DDP">DDP - Delivered Duty Paid</option>
+                          <option value="CFR">CFR - Cost and Freight</option>
+                          <option value="EXW">EXW - Ex Works</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label
                           htmlFor="origen"
-                          className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                         >
                           Punt d'Origen / Port
                         </label>
@@ -1076,14 +1432,14 @@ export default function App() {
                           value={formData.origen}
                           onChange={(e) => setFormData({ ...formData, origen: e.target.value })}
                           placeholder="Ex. Port de Barcelona / Lleida"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all placeholder:text-purple-400"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
                         <label
                           htmlFor="desti"
-                          className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                         >
                           Punt de Destinació / País
                         </label>
@@ -1093,8 +1449,8 @@ export default function App() {
                           name="desti"
                           value={formData.desti}
                           onChange={(e) => setFormData({ ...formData, desti: e.target.value })}
-                          placeholder="Ex. Rotterdam / Hamburg / Chicago"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all placeholder:text-purple-400"
+                          placeholder="Ex. Rotterdam / Hamburg / Xangai"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -1102,7 +1458,7 @@ export default function App() {
                     <div>
                       <label
                         htmlFor="observacions"
-                        className="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5"
+                        className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
                       >
                         Descripció de la Càrrega i Requeriments Tècnics *
                       </label>
@@ -1114,7 +1470,7 @@ export default function App() {
                         value={formData.observacions}
                         onChange={(e) => setFormData({ ...formData, observacions: e.target.value })}
                         placeholder="Indica volum (m³), pes brut (kg), nombre de palets, codi aranzelari TARIC si es coneix, consigna de temperatura (ºC) o data prevista d'embarcament..."
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-hidden transition-all resize-none placeholder:text-purple-400"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all resize-none placeholder:text-slate-500"
                       />
                     </div>
 
@@ -1122,12 +1478,12 @@ export default function App() {
                       <button
                         type="submit"
                         disabled={formLoading}
-                        className="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-lg shadow-pink-900/40 transition-all focus:ring-4 focus:ring-pink-500/30 disabled:opacity-75 cursor-pointer flex items-center justify-center gap-2"
+                        className="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-xl shadow-fuchsia-950/40 transition-all focus:ring-4 focus:ring-pink-500/30 disabled:opacity-75 cursor-pointer flex items-center justify-center gap-2"
                       >
                         {formLoading ? (
                           <>
                             <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                            Calculant ruta i generant notificació...
+                            Trametent sol·licitud a Formspree...
                           </>
                         ) : (
                           'Sol·licitar Cotització i Enviar a adam043@vidalibarraquer.net'
@@ -1143,34 +1499,34 @@ export default function App() {
       </main>
 
       {/* ======================================================== */}
-      {/* 7. FOOTER CORPORATIU FOSC & ENLLAÇOS LEGALS              */}
+      {/* 8. FOOTER CORPORATIU FOSC & ENLLAÇOS LEGALS              */}
       {/* ======================================================== */}
-      <footer className="bg-purple-950 text-purple-300 border-t border-purple-900 text-sm">
+      <footer className="bg-slate-950 text-slate-400 border-t border-purple-950 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           
-          {/* Advertència de Projecte Estudiantil Requerida */}
-          <div className="mb-8 p-4 rounded-xl bg-pink-500/10 border border-pink-500/30 text-pink-200 text-xs flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
+          {/* Advertència de Projecte Acadèmic */}
+          <div className="mb-8 p-4 rounded-xl bg-purple-950/50 border border-purple-800/60 text-slate-300 text-xs flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
             <AlertCircle className="w-5 h-5 shrink-0 text-pink-400" />
             <span>
-              <strong>AVÍS ACADÈMIC:</strong> Aquest lloc web és un prototip de prova generat exclusivament en l'àmbit estudiantil amb finalitats educatives (Cicle Formatiu de Grau Superior en Transport i Logística / Comerç Internacional). No correspon a cap activitat comercial mercantil activa.
+              <strong>AVÍS ACADÈMIC:</strong> Aquest lloc web és un prototip educatiu desenvolupat per al Cicle Formatiu de Grau Superior en Transport i Logística / Comerç Internacional. No correspon a una societat mercantil activa.
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-purple-900">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-purple-900/50">
             <div className="flex items-center gap-3">
-              <BrandLogo className="w-10 h-10" />
+              <BrandLogo className="w-9 h-9" />
               <div>
-                <span className="text-lg font-black tracking-tight text-white uppercase">
+                <span className="text-base font-black tracking-tight text-white uppercase">
                   ADAM TRANSPORT AND LOGISTIC
                 </span>
-                <p className="text-xs text-purple-300 mt-0.5 max-w-md">
-                  Especialistes en transport multimodal port-a-porta, flota refrigerada FTL i magatzem regulador autoritzat DA a Barcelona.
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Operador logístic integral · Transport marítim FCL · Flota frigorífica FTL · Dipòsit WMS ZAL Barcelona.
                 </p>
               </div>
             </div>
 
-            {/* Enllaços Legals */}
-            <div className="flex flex-wrap gap-6 text-xs text-purple-300">
+            {/* Enllaços Legals (Modals Interactius) */}
+            <div className="flex flex-wrap gap-5 text-xs text-slate-300">
               <button
                 type="button"
                 onClick={() => setLegalModal('avis')}
@@ -1202,41 +1558,32 @@ export default function App() {
             </div>
           </div>
 
-          {/* Barra de Control de Versió, Data d'Avui i Formspree */}
-          <div className="py-3.5 my-6 px-4 rounded-xl bg-purple-900/60 border border-purple-800 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-purple-950 border border-pink-500/50 text-pink-300 font-mono font-bold text-xs shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Versió Final Web (actualitzaho cada cop que fem canvis a partir d'ara)
-              </span>
-              <span className="text-purple-200 font-medium">
-                Data d'avui: <strong className="text-white font-semibold">6 de novembre de 2026</strong>
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-purple-300">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-purple-950/80 border border-purple-700 text-[11px] font-mono text-purple-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
-                Formspree connectat: <a href="https://formspree.io/f/xvkkyjgo" target="_blank" rel="noreferrer" className="text-pink-300 hover:underline">https://formspree.io/f/xvkkyjgo</a> &rarr; adam043@vidalibarraquer.net
-              </span>
-            </div>
+          {/* Data d'avui al peu de pàgina */}
+          <div className="py-3 my-6 px-4 rounded-xl bg-slate-900/60 border border-purple-900/40 flex items-center justify-between text-xs">
+            <span className="text-slate-300 font-medium">
+              Data d'avui: <strong className="text-white font-semibold">10 de novembre de 2026</strong>
+            </span>
+            <span className="text-slate-500 text-xs hidden sm:inline">
+              Projecte de Transport & Logística
+            </span>
           </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between text-xs text-purple-400 gap-4">
-            <p>&copy; 2026 ADAM TRANSPORT AND LOGISTIC. Tots els drets reservats (Projecte Estudiantil de Logística).</p>
-            <p>Fotografies reals del sector marítim i logístic lliures d'ús comercial (Unsplash).</p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+            <p>&copy; 2026 ADAM TRANSPORT AND LOGISTIC. Tots els drets reservats.</p>
+            <p>Fotografies autoritzades del sector marítim i logístic.</p>
           </div>
         </div>
       </footer>
 
       {/* ======================================================== */}
-      {/* MODAL 1: FITXA TÈCNICA DEL PRODUCTE LOGÍSTIC             */}
+      {/* MODAL 1: FITXA TÈCNICA COMPLETA DEL PRODUCTE             */}
       {/* ======================================================== */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 bg-purple-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-purple-950 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-purple-800 text-purple-100">
-            <div className="sticky top-0 bg-purple-950/95 backdrop-blur-md px-6 py-4 border-b border-purple-800 flex items-center justify-between z-10">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-purple-800 text-slate-100">
+            <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md px-6 py-4 border-b border-purple-800 flex items-center justify-between z-10">
               <div>
-                <span className="text-[11px] font-mono font-bold text-pink-300 bg-purple-900 px-2.5 py-0.5 rounded border border-pink-500/40">
+                <span className="text-[11px] font-mono font-bold text-pink-300 bg-purple-950 px-2.5 py-0.5 rounded border border-pink-500/40">
                   {selectedProduct.refInterna}
                 </span>
                 <h3 className="text-lg font-bold text-white mt-1">
@@ -1246,14 +1593,13 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setSelectedProduct(null)}
-                className="p-2 rounded-lg text-purple-400 hover:text-white hover:bg-purple-900 transition-colors cursor-pointer"
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Capçalera amb Imatge Real */}
               <div className="relative h-48 rounded-xl overflow-hidden border border-purple-800">
                 <img
                   src={selectedProduct.imatge}
@@ -1268,86 +1614,83 @@ export default function App() {
                   }}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-950 via-purple-950/40 to-transparent flex items-end p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-4">
                   <p className="text-white font-bold text-base">{selectedProduct.nomTecnic}</p>
                 </div>
               </div>
 
-              {/* Descripció Tècnica Exhaustiva */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-pink-400 mb-2">
                   Definició Operativa i Abast del Servei
                 </h4>
-                <p className="text-sm text-purple-200 leading-relaxed bg-purple-900/40 p-4 rounded-xl border border-purple-800/80">
+                <p className="text-sm text-slate-300 leading-relaxed bg-slate-950 p-4 rounded-xl border border-purple-900/70">
                   {selectedProduct.descripcioCompleta}
                 </p>
               </div>
 
-              {/* Dades Tècniques de Comerç Internacional */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-pink-400 mb-3">
                   Especificacions Tècniques de Comerç Internacional & Transport
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800">
-                    <span className="text-purple-300 block font-medium">Codi Tècnic Oficial & TARIC</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
+                    <span className="text-slate-400 block font-medium">Codi Tècnic Oficial & TARIC</span>
                     <span className="font-mono font-semibold text-pink-300">{selectedProduct.codiTecnic}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800">
-                    <span className="text-purple-300 block font-medium">Marc Normatiu & Homologació</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
+                    <span className="text-slate-400 block font-medium">Marc Normatiu & Homologació</span>
                     <span className="font-semibold text-white">{selectedProduct.normativa}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800">
-                    <span className="text-purple-300 block font-medium">Dimensions Interiors i Pas</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
+                    <span className="text-slate-400 block font-medium">Dimensions Interiors i Pas</span>
                     <span className="font-semibold text-white">{selectedProduct.especificacions.dimensions}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800">
-                    <span className="text-purple-300 block font-medium">Volum Útil (CBM)</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
+                    <span className="text-slate-400 block font-medium">Volum Útil (CBM)</span>
                     <span className="font-semibold text-pink-300">{selectedProduct.especificacions.volum}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800">
-                    <span className="text-purple-300 block font-medium">Balanç de Tara & Pes Brut</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
+                    <span className="text-slate-400 block font-medium">Balanç de Tara & Pes Brut</span>
                     <span className="font-semibold text-white">{selectedProduct.especificacions.tara}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800">
-                    <span className="text-purple-300 block font-medium">Càrrega Màxima Útil (Payload)</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
+                    <span className="text-slate-400 block font-medium">Càrrega Màxima Útil (Payload)</span>
                     <span className="font-semibold text-pink-300">{selectedProduct.especificacions.payload}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800 md:col-span-2">
-                    <span className="text-purple-300 block font-medium">Capacitat d'Estiba en Palets Normalitzats</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
+                    <span className="text-slate-400 block font-medium">Capacitat d'Estiba en Palets Normalitzats</span>
                     <span className="font-semibold text-white">{selectedProduct.especificacions.capacitatPalets}</span>
                   </div>
                   {selectedProduct.especificacions.temperatura && (
-                    <div className="p-3 bg-fuchsia-950/70 rounded-lg border border-pink-500/40 md:col-span-2">
-                      <span className="text-pink-300 block font-medium">Regulació Tèrmica Homologada</span>
-                      <span className="font-semibold text-pink-100">{selectedProduct.especificacions.temperatura}</span>
+                    <div className="p-3 bg-slate-950 rounded-lg border border-pink-500/40 md:col-span-2">
+                      <span className="text-pink-300 block font-medium">Regulació Tèrmica Homologada ATP</span>
+                      <span className="font-semibold text-white">{selectedProduct.especificacions.temperatura}</span>
                     </div>
                   )}
                   {selectedProduct.especificacions.incoterms && (
-                    <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800 md:col-span-2">
-                      <span className="text-purple-300 block font-medium">Incoterms® 2020 Suportats</span>
+                    <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
+                      <span className="text-slate-400 block font-medium">Incoterms® 2020 Suportats</span>
                       <span className="font-semibold text-pink-300">{selectedProduct.especificacions.incoterms}</span>
                     </div>
                   )}
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800 md:col-span-2">
-                    <span className="text-purple-300 block font-medium">Documentació Exigida & Duanera</span>
-                    <span className="font-semibold text-purple-200 leading-relaxed">{selectedProduct.especificacions.documentacio}</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
+                    <span className="text-slate-400 block font-medium">Documentació Exigida & Duanera</span>
+                    <span className="font-semibold text-slate-200 leading-relaxed">{selectedProduct.especificacions.documentacio}</span>
                   </div>
-                  <div className="p-3 bg-purple-900/40 rounded-lg border border-purple-800 md:col-span-2">
-                    <span className="text-purple-300 block font-medium">Certificacions de Qualitat i Sanitàries</span>
+                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
+                    <span className="text-slate-400 block font-medium">Certificacions de Qualitat i Sanitàries</span>
                     <span className="font-semibold text-white">{selectedProduct.especificacions.certificats}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Avantatges Operatius */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-pink-400 mb-2">
                   Valor Afegit i Garanties Operatives
                 </h4>
-                <ul className="space-y-2 text-xs text-purple-200">
+                <ul className="space-y-2 text-xs text-slate-300">
                   {selectedProduct.avantatges.map((av, idx) => (
-                    <li key={idx} className="flex items-start gap-2 bg-purple-900/40 p-2.5 rounded-lg border border-purple-800">
+                    <li key={idx} className="flex items-start gap-2 bg-slate-950 p-2.5 rounded-lg border border-purple-900/60">
                       <CheckCircle2 className="w-4 h-4 text-pink-400 shrink-0 mt-0.5" />
                       <span>{av}</span>
                     </li>
@@ -1355,12 +1698,11 @@ export default function App() {
                 </ul>
               </div>
 
-              {/* Botó de Cotització des del Modal */}
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-purple-800">
+              <div className="pt-2 flex items-center justify-end gap-3 border-t border-purple-900/80">
                 <button
                   type="button"
                   onClick={() => setSelectedProduct(null)}
-                  className="px-4 py-2.5 rounded-lg border border-purple-700 text-purple-300 text-xs font-semibold hover:bg-purple-900 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg border border-purple-800 text-slate-300 text-xs font-semibold hover:bg-slate-800 cursor-pointer"
                 >
                   Tancar
                 </button>
@@ -1370,7 +1712,7 @@ export default function App() {
                     handlePreselectService(selectedProduct.refInterna);
                     setSelectedProduct(null);
                   }}
-                  className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold shadow-md cursor-pointer inline-flex items-center gap-1.5"
                 >
                   Demanar Cotització d'aquest Producte
                   <ArrowRight className="w-3.5 h-3.5 text-white" />
@@ -1385,9 +1727,9 @@ export default function App() {
       {/* MODAL 2: AVIS LEGAL / PRIVACITAT / COOKIES               */}
       {/* ======================================================== */}
       {legalModal && (
-        <div className="fixed inset-0 z-50 bg-purple-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-purple-950 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-purple-800 text-purple-200">
-            <div className="sticky top-0 bg-purple-950/95 backdrop-blur-md px-6 py-4 border-b border-purple-800 flex items-center justify-between z-10">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-purple-800 text-slate-200">
+            <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md px-6 py-4 border-b border-purple-800 flex items-center justify-between z-10">
               <h3 className="text-base font-bold text-white">
                 {legalModal === 'avis' && 'Avís Legal i Dades Identificatives'}
                 {legalModal === 'privacitat' && 'Política de Privacitat i Protecció de Dades (RGPD)'}
@@ -1397,27 +1739,26 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setLegalModal(null)}
-                className="p-2 rounded-lg text-purple-400 hover:text-white hover:bg-purple-900 transition-colors cursor-pointer"
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 text-xs text-purple-200 space-y-4 leading-relaxed">
+            <div className="p-6 text-xs text-slate-300 space-y-4 leading-relaxed">
               {legalModal === 'avis' && (
                 <>
                   <p>
-                    En compliment de l'article 10 de la Llei 34/2002, d'11 de juliol, de serveis de la societat de la informació i de comerç electrònic (LSSI-CE), s'informa que aquesta web correspon al projecte formatiu de l'entitat fictícia <strong>ADAM TRANSPORT AND LOGISTIC</strong>.
+                    En compliment de la Llei 34/2002 (LSSI-CE), s'informa que aquest lloc web correspon a un projecte formatiu de l'entitat acadèmica <strong>ADAM TRANSPORT AND LOGISTIC</strong>.
                   </p>
                   <p>
                     <strong>Denominació:</strong> Adam Transport and Logistic S.L. (Projecte Acadèmic)<br />
                     <strong>CIF Fictici:</strong> B-08992341<br />
-                    <strong>Domicili Social:</strong> Carrer del Port, Moll Sud, Nau 14-B, 08040 Barcelona, Espanya.<br />
-                    <strong>Registre Mercantil:</strong> Tom 42.100, Foli 88, Full B-412.000.<br />
-                    <strong>Contacte:</strong> adam043@vidalibarraquer.net | Tel. +34 932 45 88 00
+                    <strong>Domicili Operatiu:</strong> Carrer del Port, Moll Sud, Nau 14-B, 08040 Barcelona, Espanya.<br />
+                    <strong>Contacte Oficial:</strong> adam043@vidalibarraquer.net | Tel. +34 932 45 88 00
                   </p>
                   <p>
-                    La informació continguda en aquest portal té una finalitat exclusivament demostrativa i acadèmica en l'àmbit de la logística internacional, duanes i transport de mercaderies per carretera i via marítima.
+                    La informació continguda té una finalitat exclusivament formativa i acadèmica en l'àmbit de la logística internacional, duanes i transports.
                   </p>
                 </>
               )}
@@ -1425,13 +1766,13 @@ export default function App() {
               {legalModal === 'privacitat' && (
                 <>
                   <p>
-                    D'acord amb el Reglament (UE) 2016/679 General de Protecció de Dades (RGPD) i la Llei Orgànica 3/2018 (LOPDGDD), les dades recollides a través del formulari de cotització seran tractades per Adam Transport and Logistic exclusivament per atendre les sol·licituds de tarifes de transport i gestió duanera.
+                    D'acord amb el Reglament (UE) 2016/679 (RGPD) i la Llei Orgànica 3/2018 (LOPDGDD), les dades recollides mitjançant el formulari de cotització seran tractades per elaborar pressupostos logístics.
                   </p>
                   <p>
-                    <strong>Responsable del tractament:</strong> Adam Transport and Logistic S.L.<br />
-                    <strong>Finalitat:</strong> Elaboració de pressupostos logístics i contacte comercial operatiu.<br />
-                    <strong>Legitimació:</strong> Consentiment exprés de la persona interessada en enviar el formulari.<br />
-                    <strong>Drets:</strong> Podeu exercir els drets d'accés, rectificació, supressió, limitació i oposició mitjançant sol·licitud a <em>adam043@vidalibarraquer.net</em>.
+                    <strong>Responsable:</strong> Adam Transport and Logistic S.L.<br />
+                    <strong>Finalitat:</strong> Tramitació de tarifes de transport i assistència tècnica.<br />
+                    <strong>Legitimació:</strong> Consentiment exprés en enviar el formulari.<br />
+                    <strong>Drets:</strong> Drets d'accés, rectificació i supressió mitjançant sol·licitud a <em>adam043@vidalibarraquer.net</em>.
                   </p>
                 </>
               )}
@@ -1439,10 +1780,10 @@ export default function App() {
               {legalModal === 'cookies' && (
                 <>
                   <p>
-                    Aquest lloc web utilitza exclusivament cookies tècniques essencials necessàries per a la navegació i el funcionament correcte del formulari de contacte i la selecció d'idioma/filtres.
+                    Aquest lloc web utilitza exclusivament cookies tècniques estrictament necessàries per a la navegació i el funcionament correcte del formulari de cotització i les eines de càlcul.
                   </p>
                   <p>
-                    No s'utilitzen cookies de tercers amb fins publicitaris ni de rastreig de perfils personals sense consentiment previ. Podeu gestionar o bloquejar la instal·lació de cookies des de la configuració del vostre navegador.
+                    No s'utilitzen cookies publicitàries ni de rastreig de perfils de tercers sense consentiment.
                   </p>
                 </>
               )}
@@ -1450,15 +1791,15 @@ export default function App() {
               {legalModal === 'condicions' && (
                 <>
                   <p>
-                    Totes les operacions de transport terrestre i marítim gestionades s'acullen a la Llei 15/2009 del contracte de transport terrestre de mercaderies (LOTT), al Conveni de Ginebra de 1956 relatiu al contracte de transport internacional de mercaderies per carretera (CMR), i a les Regles de la Haia-Visby per al transport marítim sota Bill of Lading.
+                    Totes les operacions de transport terrestre i marítim es regeixen per la Llei 15/2009 del contracte de transport terrestre (LOTT), el Conveni CMR (Ginebra 1956) i les Regles de la Haia-Visby per al transport marítim sota Bill of Lading.
                   </p>
                   <p>
-                    La responsabilitat de l'operador logístic es limita estrictament als barems establerts en el dret internacional aplicable (8,33 DEG per quilogram brut en carretera i 666,67 DEG per paquet o 2 DEG per quilogram brut en via marítima), llevat de declaració expressa de valor acceptada en la pòlissa.
+                    La responsabilitat s'ajusta als barems internacionals establerts (8,33 DEG/kg en carretera i 666,67 DEG/buit o 2 DEG/kg en transport marítim).
                   </p>
                 </>
               )}
 
-              <div className="pt-4 border-t border-purple-800 flex justify-end">
+              <div className="pt-4 border-t border-purple-900/80 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setLegalModal(null)}
