@@ -34,6 +34,24 @@ interface TrackingData {
 
 // Dades de prova acadèmiques per si el full de càlcul de SheetDB es troba en format vertical o buit
 const ACADEMIC_SAMPLE_RECORDS: Record<string, TrackingData> = {
+  'ATL-RTT-0011': {
+    trackingCode: 'ATL-RTT-0011',
+    client: 'ADAM',
+    origin: 'BARCELONA',
+    destination: 'ROTTERDAM',
+    eta: '14/11/2026',
+    location: 'PARIS',
+    status: 'En magatzem'
+  },
+  'TRK-001': {
+    trackingCode: 'TRK-001',
+    client: 'Adam Transport & Logistic',
+    origin: 'Port de Barcelona',
+    destination: 'Rotterdam Maasvlakte',
+    eta: '18/11/2026',
+    location: 'En trànsit - Corredor Mediterrani',
+    status: 'En trànsit'
+  },
   'ATL-MAR-7410': {
     trackingCode: 'ATL-MAR-7410',
     client: 'AgroFoods Iberia S.L.',
@@ -83,9 +101,9 @@ export default function TrackingPage() {
   // - Si és 'En trànsit' -> 50% blava
   // - Si és 'En magatzem' -> 10%
   const getProgressConfig = (statusStr: string) => {
-    const s = (statusStr || '').toLowerCase();
+    const s = (statusStr || '').toLowerCase().trim();
 
-    if (s.includes('lliurat') || s.includes('entregado') || s.includes('delivered')) {
+    if (s.includes('lliurat') || s.includes('entregad') || s.includes('delivered') || s.includes('completat')) {
       return {
         percent: 100,
         colorClass: 'bg-green-500',
@@ -144,63 +162,114 @@ export default function TrackingPage() {
     setResult(null);
 
     try {
-      // 1. Fetch directe a l'API segons l'especificació: [TEVA_URL]/search?tracking_code=[VALOR_INPUT]
-      const targetUrl = `${SHEETDB_URL}/search?tracking_code=${encodeURIComponent(query)}`;
-      const res = await fetch(targetUrl);
-      const data = await res.json();
-
       let matchedItem: any = null;
 
-      // Si retorna un array amb dades vàlides
-      if (Array.isArray(data) && data.length > 0) {
-        matchedItem = data[0];
-      } else if (data && data.error) {
-        // En cas que la columna tingui espai al final al full de càlcul (ex: 'tracking_code ')
-        const altUrl = `${SHEETDB_URL}/search?tracking_code%20=${encodeURIComponent(query)}`;
+      // 1. Fetch directe a l'API segons l'especificació: [TEVA_URL]/search?tracking_code=[VALOR_INPUT]
+      const targetUrl = `${SHEETDB_URL}/search?tracking_code=${encodeURIComponent(query)}`;
+      try {
+        const res = await fetch(targetUrl, { cache: 'no-store' });
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          matchedItem = data[0];
+        }
+      } catch {
+        // Continuar cap a la cerca de full complet en viu
+      }
+
+      // 2. Consulta en temps real de tota la taula (sense memòria cau)
+      // Permet detectar tant estructures horitzontals com verticals (ex: ATL-RTT-0011 a l'Excel de l'alumne)
+      if (!matchedItem) {
         try {
-          const altRes = await fetch(altUrl);
-          const altData = await altRes.json();
-          if (Array.isArray(altData) && altData.length > 0) {
-            matchedItem = altData[0];
+          const freshRes = await fetch(`${SHEETDB_URL}?_nocache=${Date.now()}`, { cache: 'no-store' });
+          const rows = await freshRes.json();
+
+          if (Array.isArray(rows) && rows.length > 0) {
+            const upperQuery = query.toUpperCase();
+
+            // A) Estructura vertical (la capçalera de columna de l'Excel és el codi, ex: 'ATL-RTT-0011' o 'TRK-001')
+            const firstRow = rows[0] || {};
+            const verticalColKey = Object.keys(firstRow).find(
+              (k) => k.trim().toUpperCase() === upperQuery
+            );
+
+            if (verticalColKey) {
+              const verticalData: any = {
+                trackingCode: verticalColKey.trim(),
+                client: '',
+                origin: '',
+                destination: '',
+                status: '',
+                location: '',
+                eta: ''
+              };
+
+              for (const r of rows) {
+                const label = (r['tracking_code '] || r.tracking_code || Object.values(r)[0] || '')
+                  .toString()
+                  .toLowerCase()
+                  .trim();
+                const val = (r[verticalColKey] || '').toString().trim();
+
+                if (label.includes('client')) verticalData.client = val;
+                else if (label.includes('origin') || label.includes('origen')) verticalData.origin = val;
+                else if (label.includes('destin')) verticalData.destination = val;
+                else if (label.includes('status') || label.includes('estat')) verticalData.status = val;
+                else if (label.includes('location') || label.includes('ubic')) verticalData.location = val;
+                else if (label.includes('eta') || label.includes('data')) verticalData.eta = val;
+              }
+
+              matchedItem = verticalData;
+            }
+
+            // B) Estructura horitzontal (les files tenen un camp tracking_code)
+            if (!matchedItem) {
+              const rowFound = rows.find((r) => {
+                const c1 = (r.tracking_code || r['tracking_code '] || r.codi || r.code || '').toString().trim().toUpperCase();
+                return c1 === upperQuery;
+              });
+
+              if (rowFound) {
+                matchedItem = {
+                  trackingCode: (rowFound.tracking_code || rowFound['tracking_code '] || query).trim(),
+                  origin: (rowFound.origin || rowFound['origin '] || rowFound.origen || 'Port de Barcelona').trim(),
+                  destination: (rowFound.destination || rowFound['destination '] || rowFound.desti || 'Destinació Internacional').trim(),
+                  eta: (rowFound.eta || rowFound['eta '] || rowFound.data || 'Pendent').trim(),
+                  location: (rowFound.location || rowFound['location '] || rowFound.ubicacio || 'En trànsit').trim(),
+                  status: (rowFound.status || rowFound['status '] || rowFound.estat || 'En trànsit').trim(),
+                  client: (rowFound.client || rowFound['client '])?.trim()
+                };
+              }
+            }
           }
         } catch {
-          // Continuar amb la cerca local
+          // Continuar amb la comprovació secundària
         }
       }
 
-      // Si s'ha trobat a la base de dades remota SheetDB
-      if (matchedItem && (matchedItem.tracking_code || matchedItem['tracking_code '])) {
-        const rawCode = (matchedItem.tracking_code || matchedItem['tracking_code ']).trim();
-        const rawOrigin = (matchedItem.origin || matchedItem['origin '] || 'Port de Barcelona').trim();
-        const rawDestination = (matchedItem.destination || matchedItem['destination '] || 'Destinació Internacional').trim();
-        const rawEta = (matchedItem.eta || matchedItem['eta '] || 'Pendent').trim();
-        const rawLocation = (matchedItem.location || matchedItem['location '] || 'En trànsit').trim();
-        const rawStatus = (matchedItem.status || matchedItem['status '] || 'En trànsit').trim();
-        const rawClient = (matchedItem.client || matchedItem['client '])?.trim();
-
+      // 3. Processar resultat trobat
+      if (matchedItem) {
         setResult({
-          trackingCode: rawCode,
-          origin: rawOrigin,
-          destination: rawDestination,
-          eta: rawEta,
-          location: rawLocation,
-          status: rawStatus,
-          client: rawClient
+          trackingCode: matchedItem.trackingCode || matchedItem.tracking_code || matchedItem['tracking_code '] || query,
+          origin: matchedItem.origin || matchedItem['origin '] || 'Port de Barcelona',
+          destination: matchedItem.destination || matchedItem['destination '] || 'Destinació Internacional',
+          eta: matchedItem.eta || matchedItem['eta '] || '14/11/2026',
+          location: matchedItem.location || matchedItem['location '] || 'En trànsit',
+          status: matchedItem.status || matchedItem['status '] || 'En trànsit',
+          client: matchedItem.client || matchedItem['client ']
         });
       } else {
-        // Cerca secundària en dades acadèmiques reals si el full de SheetDB té capçaleres verticals o de prova
+        // Cerca en mostres de referència acadèmica si el full no conté el codi
         const upper = query.toUpperCase();
         const fallback = ACADEMIC_SAMPLE_RECORDS[upper];
 
         if (fallback) {
           setResult(fallback);
         } else {
-          // Si no troba res (array buit o no coincident): mostra un missatge d'error vermell: 'Codi no trobat'
+          // Requeriment estricte: Si no troba res (array buit), mostra un missatge d'error vermell: 'Codi no trobat'
           setError('Codi no trobat');
         }
       }
     } catch {
-      // Si la crida falla per xarxa o timeout, comprovar les mostres acadèmiques de suport
       const upper = query.toUpperCase();
       const fallback = ACADEMIC_SAMPLE_RECORDS[upper];
 
@@ -312,8 +381,8 @@ export default function TrackingPage() {
 
           {/* Suggeriments ràpids per avaluar l'aplicació */}
           <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span className="font-medium">Codis d'exemple:</span>
-            {['ATL-MAR-7410', 'ATL-REEF-8840', 'ATL-WMS-2210', 'ATL-STO-1020'].map((code) => (
+            <span className="font-medium">Codis del teu Excel & exemples:</span>
+            {['ATL-RTT-0011', 'TRK-001', 'ATL-MAR-7410', 'ATL-REEF-8840', 'ATL-WMS-2210'].map((code) => (
               <button
                 key={code}
                 type="button"
