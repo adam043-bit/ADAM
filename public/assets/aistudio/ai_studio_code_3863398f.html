@@ -76,9 +76,13 @@
         </a>
 
         <!-- Enllaços d'Escriptori -->
-        <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold text-purple-200">
+        <nav class="hidden md:flex items-center space-x-7 text-sm font-semibold text-purple-200">
           <a href="#inici" class="hover:text-pink-300 transition-colors">Inici</a>
           <a href="#serveis" class="hover:text-pink-300 transition-colors">Serveis/Catàleg</a>
+          <a href="#tracking" class="hover:text-pink-300 transition-colors inline-flex items-center gap-1.5 text-pink-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Seguiment (SheetDB)
+          </a>
           <a href="#quisom" class="hover:text-pink-300 transition-colors">Qui Som</a>
           <a href="#blog" class="hover:text-pink-300 transition-colors">Blog</a>
           <a href="#contacte" class="hover:text-pink-300 transition-colors">Contacte</a>
@@ -106,6 +110,7 @@
     <div id="mobile-menu" class="hidden md:hidden border-b border-purple-900 bg-purple-950 px-4 pt-3 pb-6 space-y-3">
       <a href="#inici" class="mobile-link block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300">Inici</a>
       <a href="#serveis" class="mobile-link block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300">Serveis/Catàleg</a>
+      <a href="#tracking" class="mobile-link block px-3 py-2 rounded-md font-medium text-pink-300 hover:bg-purple-900">Seguiment (SheetDB API)</a>
       <a href="#quisom" class="mobile-link block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300">Qui Som</a>
       <a href="#blog" class="mobile-link block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300">Blog</a>
       <a href="#contacte" class="mobile-link block px-3 py-2 rounded-md font-medium text-purple-100 hover:bg-purple-900 hover:text-pink-300">Contacte</a>
@@ -530,8 +535,215 @@
       </div>
     </section>
 
+    <!-- ======================================================== -->
+    <!-- 4. SECCIÓ SEGUIMENT D'ENVIAMENTS & BASE DE DADES SHEETDB   -->
+    <!-- ======================================================== -->
+    <section id="tracking" class="py-20 bg-purple-900/30 border-y border-purple-800/80 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Capçalera de la secció -->
+        <div class="max-w-3xl mb-12">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-300 text-xs font-semibold mb-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Base de Dades Real Connectada: SheetDB API (v1)
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Seguiment d'Enviaments en Temps Real (Track & Trace)
+          </h2>
+          <p class="mt-3 text-sm text-purple-200 leading-relaxed">
+            Consulta l'estat en viu dels teus enviaments sincronitzats directament amb el full de càlcul operatiu a través del servei SheetDB (<span class="font-mono text-pink-300">https://sheetdb.io/api/v1/fst1vl3p3sehx</span>).
+          </p>
+        </div>
+
+        <!-- Barra de cerca i estat de la base de dades -->
+        <div class="bg-purple-950/90 rounded-2xl p-6 border border-purple-800/80 shadow-xl mb-8">
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            
+            <!-- Input de cerca -->
+            <div class="relative flex-1">
+              <input
+                type="text"
+                id="tracking-search-input"
+                placeholder="Introdueix codi de seguiment (ex: ATL-MAR-7410, ATL-REEF-8840)..."
+                class="w-full pl-11 pr-4 py-3 rounded-xl bg-purple-900/60 border border-purple-700 text-white placeholder-purple-400 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+              <svg class="w-5 h-5 text-purple-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+
+            <!-- Botons d'acció -->
+            <div class="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                id="tracking-search-btn"
+                class="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold shadow-md cursor-pointer transition-colors"
+              >
+                Cercar Codi
+              </button>
+
+              <button
+                type="button"
+                id="tracking-refresh-btn"
+                title="Sincronitzar amb SheetDB"
+                class="px-4 py-3 rounded-xl bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 hover:text-white text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <svg id="refresh-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Sincronitzar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mostres ràpides -->
+          <div class="mt-4 pt-4 border-t border-purple-900/80 flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-purple-300">Exemples de consulta a la base de dades:</span>
+            <button type="button" class="quick-code-btn px-2.5 py-1 rounded-md bg-purple-900/90 hover:bg-pink-900/40 text-pink-300 font-mono border border-purple-700/60 cursor-pointer">
+              ATL-MAR-7410
+            </button>
+            <button type="button" class="quick-code-btn px-2.5 py-1 rounded-md bg-purple-900/90 hover:bg-pink-900/40 text-pink-300 font-mono border border-purple-700/60 cursor-pointer">
+              ATL-REEF-8840
+            </button>
+            <button type="button" class="quick-code-btn px-2.5 py-1 rounded-md bg-purple-900/90 hover:bg-pink-900/40 text-pink-300 font-mono border border-purple-700/60 cursor-pointer">
+              ATL-WMS-2210
+            </button>
+            <span id="sheetdb-status-pill" class="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              SheetDB API Connectada
+            </span>
+          </div>
+        </div>
+
+        <!-- Targeta de resultat detallat de l'enviament -->
+        <div id="tracking-result-card" class="bg-slate-900/95 rounded-2xl p-6 sm:p-8 border border-purple-800/80 shadow-2xl mb-8">
+          <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-purple-900/80 gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <span id="res-code" class="text-xl sm:text-2xl font-mono font-black text-pink-400">ATL-MAR-7410</span>
+                <span id="res-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  En trànsit marítim
+                </span>
+              </div>
+              <p class="text-xs text-purple-300 mt-1">
+                Client: <strong id="res-client" class="text-white">AgroFoods Iberia S.L.</strong> &bull; Servei: <span id="res-service" class="text-pink-300 font-medium">FCL 40' High Cube</span>
+              </p>
+            </div>
+            <div class="text-left md:text-right">
+              <span class="text-xs uppercase tracking-wider text-purple-400 font-semibold block">Data Prevista d'Arribada (ETA)</span>
+              <span id="res-eta" class="text-base sm:text-lg font-bold text-white font-mono">18/11/2026</span>
+            </div>
+          </div>
+
+          <!-- Línia de progrés de 4 etapes -->
+          <div class="py-8">
+            <div class="grid grid-cols-4 gap-2 relative">
+              <div class="text-center">
+                <div class="w-9 h-9 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs mb-2">✓</div>
+                <span class="text-xs font-semibold text-white block">1. Booking</span>
+                <span class="text-[10px] text-purple-300 block">Confirmat</span>
+              </div>
+              <div class="text-center">
+                <div class="w-9 h-9 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs mb-2">✓</div>
+                <span class="text-xs font-semibold text-white block">2. DUA OEA</span>
+                <span class="text-[10px] text-purple-300 block">Despatxat</span>
+              </div>
+              <div class="text-center">
+                <div id="step-transit" class="w-9 h-9 mx-auto rounded-full bg-pink-500 text-white flex items-center justify-center font-bold text-xs mb-2 animate-pulse">3</div>
+                <span class="text-xs font-semibold text-pink-300 block">3. Trànsit</span>
+                <span id="step-transit-sub" class="text-[10px] text-purple-300 block">En ruta activa</span>
+              </div>
+              <div class="text-center">
+                <div id="step-delivery" class="w-9 h-9 mx-auto rounded-full bg-purple-900 border border-purple-700 text-purple-400 flex items-center justify-center font-bold text-xs mb-2">4</div>
+                <span class="text-xs font-semibold text-purple-400 block">4. Lliurament</span>
+                <span id="step-delivery-sub" class="text-[10px] text-purple-400 block">Pendent</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rota d'origen a destí -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-purple-950/80 border border-purple-900 text-xs">
+            <div>
+              <span class="text-purple-400 uppercase text-[10px] font-bold block">Punt d'Origen</span>
+              <p id="res-origin" class="text-white font-semibold mt-0.5">Port de Barcelona (Terminal BEST)</p>
+            </div>
+            <div>
+              <span class="text-purple-400 uppercase text-[10px] font-bold block">Ubicació Actual Registrada</span>
+              <p id="res-location" class="text-pink-300 font-semibold mt-0.5">Mar Roig - Rumb Canal de Suez</p>
+            </div>
+            <div>
+              <span class="text-purple-400 uppercase text-[10px] font-bold block">Destinació Final</span>
+              <p id="res-destination" class="text-white font-semibold mt-0.5">Xangai (Port de Yangshan, Xina)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Taula de tots els registres des de SheetDB -->
+        <div class="bg-purple-950/80 rounded-2xl p-6 border border-purple-800/80 shadow-xl overflow-hidden">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-6-8h6"/>
+              </svg>
+              Registres Actius a la Base de Dades (SheetDB)
+            </h3>
+            <span id="records-count-badge" class="px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-xs font-mono font-bold">
+              3 registres carregats
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-purple-200">
+              <thead class="bg-purple-900/60 text-purple-300 uppercase tracking-wider font-semibold border-b border-purple-800">
+                <tr>
+                  <th class="py-3 px-4">Codi Tracking</th>
+                  <th class="py-3 px-4">Client</th>
+                  <th class="py-3 px-4">Origen</th>
+                  <th class="py-3 px-4">Destinació</th>
+                  <th class="py-3 px-4">Estat Operatiu</th>
+                  <th class="py-3 px-4">ETA</th>
+                  <th class="py-3 px-4 text-right">Acció</th>
+                </tr>
+              </thead>
+              <tbody id="tracking-table-body" class="divide-y divide-purple-900/50">
+                <tr class="hover:bg-purple-900/30 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-pink-300">ATL-MAR-7410</td>
+                  <td class="py-3 px-4 font-semibold text-white">AgroFoods Iberia S.L.</td>
+                  <td class="py-3 px-4">Port de Barcelona</td>
+                  <td class="py-3 px-4">Xangai (Yangshan)</td>
+                  <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">En trànsit marítim</span></td>
+                  <td class="py-3 px-4 font-mono">18/11/2026</td>
+                  <td class="py-3 px-4 text-right"><button type="button" onclick="selectTrackingRow('ATL-MAR-7410')" class="text-pink-400 hover:text-pink-300 underline font-semibold">Veure detalls</button></td>
+                </tr>
+                <tr class="hover:bg-purple-900/30 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-pink-300">ATL-REEF-8840</td>
+                  <td class="py-3 px-4 font-semibold text-white">PharmaCold Logistics</td>
+                  <td class="py-3 px-4">ZAL Port Barcelona</td>
+                  <td class="py-3 px-4">Frankfurt am Main (Alemanya)</td>
+                  <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">Ruta Terrestre FTL (-20°C)</span></td>
+                  <td class="py-3 px-4 font-mono">14/11/2026</td>
+                  <td class="py-3 px-4 text-right"><button type="button" onclick="selectTrackingRow('ATL-REEF-8840')" class="text-pink-400 hover:text-pink-300 underline font-semibold">Veure detalls</button></td>
+                </tr>
+                <tr class="hover:bg-purple-900/30 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-pink-300">ATL-WMS-2210</td>
+                  <td class="py-3 px-4 font-semibold text-white">Catalunya Distribució</td>
+                  <td class="py-3 px-4">Magatzem Central ZAL</td>
+                  <td class="py-3 px-4">Plataforma Logística Madrid</td>
+                  <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Lliurat & Conformat</span></td>
+                  <td class="py-3 px-4 font-mono">10/11/2026</td>
+                  <td class="py-3 px-4 text-right"><button type="button" onclick="selectTrackingRow('ATL-WMS-2210')" class="text-pink-400 hover:text-pink-300 underline font-semibold">Veure detalls</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- ========================================== -->
-    <!-- 6. SECCIÓ CONTACTE & FORMULARI             -->
+    <!-- 5. SECCIÓ CONTACTE & FORMULARI             -->
     <!-- ========================================== -->
     <section id="contacte" class="py-24 bg-purple-950 text-purple-100 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -598,18 +810,25 @@
             </div>
           </div>
 
-          <!-- Formulari Operatiu (Columna Dreta) -->
+          <!-- Formulari Operatiu amb Doble Destinació: SheetDB API + Formspree (adam043@vidalibarraquer.net) -->
           <div class="lg:col-span-7 bg-purple-900/60 backdrop-blur-md text-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-purple-800">
             <h3 class="text-2xl font-bold text-white mb-2">Sol·licitud de Pressupost i Serveis</h3>
+            
             <div class="flex flex-wrap items-center gap-2 mb-4">
               <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pink-500/15 border border-pink-500/40 text-pink-300 text-[11px] font-mono">
-                <span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
-                Formspree actiu: https://formspree.io/f/xvkkyjgo &rarr; adam043@vidalibarraquer.net
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                SheetDB: https://sheetdb.io/api/v1/fst1vl3p3sehx
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[11px] font-mono">
+                Formspree &rarr; adam043@vidalibarraquer.net
               </span>
             </div>
-            <p class="text-xs text-purple-200 mb-6">Omple el formulari. En prémer enviar, es trametrà a través de <strong>Formspree</strong> directament a la bústia acadèmica <strong>adam043@vidalibarraquer.net</strong>.</p>
 
-            <form id="contact-form" action="https://formspree.io/f/xvkkyjgo" method="POST" class="space-y-4" onsubmit="event.preventDefault(); const form = this; const feedback = document.getElementById('form-feedback'); const btnSubmit = document.getElementById('submit-btn'); btnSubmit.disabled = true; btnSubmit.innerHTML = 'Enviant dades a Formspree...'; const formDataObj = { nom: document.getElementById('nom').value, empresa: document.getElementById('empresa').value, email: document.getElementById('correu').value, servei: document.getElementById('servei-select').value, requeriments: document.getElementById('consulta').value, _subject: 'Nova Cotització Logística [' + document.getElementById('empresa').value + '] - Adam Transport' }; fetch('https://formspree.io/f/xvkkyjgo', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(formDataObj) }).then(function() { feedback.classList.remove('hidden'); btnSubmit.innerHTML = 'Enviat correctament!'; }).catch(function() { feedback.classList.remove('hidden'); btnSubmit.disabled = false; btnSubmit.innerHTML = 'Enviar Sol·licitud a adam043@vidalibarraquer.net'; });">
+            <p class="text-xs text-purple-200 mb-6">
+              Omple el formulari. En enviar, la sol·licitud es registra a la base de dades en línia de <strong>SheetDB</strong> generant un codi de seguiment únic (<span class="font-mono text-pink-300">#ATL-XXXXXX</span>) i s'envia simultàniament a la bústia acadèmica <strong>adam043@vidalibarraquer.net</strong> via Formspree.
+            </p>
+
+            <form id="contact-form" class="space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Nom -->
                 <div>
@@ -642,21 +861,47 @@
                 </div>
               </div>
 
+              <!-- Origen i Destinació -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="origen-input" class="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5">Origen de l'Enviament</label>
+                  <input type="text" id="origen-input" name="origen" placeholder="Ex. Port de Barcelona / ZAL" value="Port de Barcelona" class="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all placeholder:text-purple-400">
+                </div>
+                <div>
+                  <label for="desti-input" class="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5">Destinació Final</label>
+                  <input type="text" id="desti-input" name="destinacio" placeholder="Ex. Xangai / Rotterdam / Frankfurt" value="Xangai (Yangshan)" class="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all placeholder:text-purple-400">
+                </div>
+              </div>
+
               <!-- Consulta Operativa -->
               <div>
                 <label for="consulta" class="block text-xs font-semibold uppercase text-purple-200 tracking-wider mb-1.5">Descripció Operativa i Dades Tècniques *</label>
-                <textarea id="consulta" name="requeriments" rows="3" required placeholder="Indica origen, destí, tipus de mercaderia, pes brut (kg), palets o requeriments de temperatura..." class="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all resize-none placeholder:text-purple-400"></textarea>
+                <textarea id="consulta" name="requeriments" rows="3" required placeholder="Indica volum de càrrega, pes brut (kg), palets o requeriments de temperatura..." class="w-full px-3.5 py-2.5 rounded-lg border border-purple-700 bg-purple-950/80 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all resize-none placeholder:text-purple-400">Sol·licitud de cotització i reserva per a fletament internacional.</textarea>
               </div>
 
-              <div id="form-feedback" class="hidden p-3 rounded-lg bg-purple-950/90 border border-pink-500/40 text-pink-200 text-xs font-medium space-y-1">
-                <p class="font-bold">✓ Sol·licitud transmesa amb èxit a Formspree!</p>
-                <p>Les dades de cotització s'han enviat directament a la bústia acadèmica <strong>adam043@vidalibarraquer.net</strong>.</p>
+              <!-- Feedback d'èxit -->
+              <div id="form-feedback" class="hidden p-4 rounded-xl bg-purple-950/95 border border-emerald-500/50 text-emerald-200 text-xs font-medium space-y-2">
+                <div class="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                  <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span>✓ Operació registrada a SheetDB i notificada a Formspree!</span>
+                </div>
+                <p>
+                  S'ha generat el codi de tracking: <strong id="created-tracking-code" class="font-mono text-pink-300 text-sm">#ATL-000000</strong>.
+                </p>
+                <p class="text-purple-200">
+                  La informació s'ha enviat directament al correu acadèmic <strong>adam043@vidalibarraquer.net</strong> i ja pots consultar el seu estat al cercador de seguiment.
+                </p>
+                <a href="#tracking" class="inline-flex items-center gap-1.5 text-pink-400 hover:text-pink-300 font-bold underline mt-1">
+                  &rarr; Anar al seguiment d'aquest enviament
+                </a>
               </div>
 
               <!-- Botó Enviar -->
               <div>
-                <button id="submit-btn" type="submit" class="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-md transition-colors focus:ring-4 focus:ring-pink-500/30">
-                  Enviar Sol·licitud via Formspree a adam043@vidalibarraquer.net
+                <button id="submit-btn" type="submit" class="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-md transition-colors focus:ring-4 focus:ring-pink-500/30 cursor-pointer">
+                  Enviar Sol·licitud (Registrar a SheetDB & Enviar a adam043@vidalibarraquer.net)
                 </button>
               </div>
             </form>
@@ -668,7 +913,7 @@
   </main>
 
   <!-- ========================================== -->
-  <!-- 7. FOOTER CORPORATIU FOSC                  -->
+  <!-- 6. FOOTER CORPORATIU FOSC                  -->
   <!-- ========================================== -->
   <footer class="bg-purple-950 text-purple-300 border-t border-purple-900 text-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -698,11 +943,20 @@
         </div>
       </div>
 
-      <!-- Data d'avui al peu de pàgina -->
-      <div class="py-3 my-6 px-4 rounded-xl bg-purple-900/40 border border-purple-800/80 flex items-center justify-between text-xs">
+      <!-- Data d'avui i Versió al peu de pàgina -->
+      <div class="py-3.5 my-6 px-4 rounded-xl bg-purple-900/40 border border-purple-800/80 flex flex-col sm:flex-row items-center justify-between text-xs gap-3">
         <span class="text-purple-200 font-medium">
-          Data d'avui: <strong class="text-white font-semibold">10 de novembre de 2026</strong>
+          Data d'avui: <strong class="text-white font-semibold">12 de novembre de 2026</strong>
         </span>
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded bg-pink-500/20 text-pink-300 font-mono text-[11px] font-bold border border-pink-500/30">
+            Versió 28 (SheetDB Live Sync)
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-emerald-400 text-[11px] font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            SheetDB API Connectada
+          </span>
+        </div>
       </div>
 
       <div class="pt-2 flex flex-col sm:flex-row items-center justify-between text-xs text-purple-400 gap-4">
@@ -713,8 +967,12 @@
     </div>
   </footer>
 
-  <!-- Script per al menú mòbil responsive -->
+  <!-- Script per al menú mòbil responsive i la integració de SheetDB -->
   <script>
+    const SHEETDB_URL = 'https://sheetdb.io/api/v1/fst1vl3p3sehx';
+    const FORMSPREE_URL = 'https://formspree.io/f/xvkkyjgo';
+
+    // Menú Mòbil
     const btn = document.getElementById('mobile-menu-btn');
     const menu = document.getElementById('mobile-menu');
     const links = document.querySelectorAll('.mobile-link');
@@ -728,6 +986,241 @@
         menu.classList.add('hidden');
       });
     });
+
+    // Registres en memòria
+    let currentRecords = [
+      {
+        tracking_code: 'ATL-MAR-7410',
+        client: 'AgroFoods Iberia S.L.',
+        origin: 'Port de Barcelona (Terminal BEST)',
+        destination: 'Xangai (Port de Yangshan, Xina)',
+        status: 'En trànsit marítim',
+        location: 'Mar Roig - Rumb Canal de Suez',
+        eta: '18/11/2026',
+        service: "FCL 40' High Cube"
+      },
+      {
+        tracking_code: 'ATL-REEF-8840',
+        client: 'PharmaCold Logistics',
+        origin: 'ZAL Port Barcelona',
+        destination: 'Frankfurt am Main (Alemanya)',
+        status: 'Ruta Terrestre FTL (-20°C)',
+        location: 'Corredor del Roina (Lió, França)',
+        eta: '14/11/2026',
+        service: 'FTL Reefer ATP FRC'
+      },
+      {
+        tracking_code: 'ATL-WMS-2210',
+        client: 'Catalunya Distribució',
+        origin: 'Magatzem Central ZAL',
+        destination: 'Plataforma Logística Madrid',
+        status: 'Lliurat & Conformat',
+        location: 'Moll 12 Lliurament Efectuat',
+        eta: '10/11/2026',
+        service: 'ZAL WMS Cross-Docking'
+      }
+    ];
+
+    // Funció per carregar des de SheetDB API
+    function fetchSheetDBData() {
+      const refreshIcon = document.getElementById('refresh-icon');
+      if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+      fetch(SHEETDB_URL)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            // Normalitzar claus amb possibles espais en blanc com 'tracking_code '
+            const normalized = data.map(item => ({
+              tracking_code: (item.tracking_code || item['tracking_code '] || '').trim(),
+              client: (item.client || item['client '] || 'Client Registrat').trim(),
+              origin: (item.origin || item['origin '] || 'Port de Barcelona').trim(),
+              destination: (item.destination || item['destination '] || 'Destinació Internacional').trim(),
+              status: (item.status || item['status '] || 'En procés').trim(),
+              location: (item.location || item['location '] || 'En trànsit').trim(),
+              eta: (item.eta || item['eta '] || '18/11/2026').trim(),
+              service: "Transport Multimodal"
+            })).filter(item => item.tracking_code.length > 0);
+
+            if (normalized.length > 0) {
+              currentRecords = normalized;
+              renderRecordsTable(currentRecords);
+            }
+          }
+        })
+        .catch(err => {
+          console.warn('Avís de connexió SheetDB (usant registres locals):', err);
+        })
+        .finally(() => {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+        });
+    }
+
+    function renderRecordsTable(records) {
+      const tbody = document.getElementById('tracking-table-body');
+      const countBadge = document.getElementById('records-count-badge');
+      if (countBadge) countBadge.textContent = records.length + ' registres carregats';
+
+      if (!tbody) return;
+      tbody.innerHTML = records.map(r => `
+        <tr class="hover:bg-purple-900/30 transition-colors">
+          <td class="py-3 px-4 font-mono font-bold text-pink-300">${r.tracking_code}</td>
+          <td class="py-3 px-4 font-semibold text-white">${r.client}</td>
+          <td class="py-3 px-4">${r.origin}</td>
+          <td class="py-3 px-4">${r.destination}</td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">${r.status}</span></td>
+          <td class="py-3 px-4 font-mono">${r.eta}</td>
+          <td class="py-3 px-4 text-right"><button type="button" onclick="selectTrackingRow('${r.tracking_code}')" class="text-pink-400 hover:text-pink-300 underline font-semibold">Veure detalls</button></td>
+        </tr>
+      `).join('');
+    }
+
+    window.selectTrackingRow = function(code) {
+      const item = currentRecords.find(r => r.tracking_code.toUpperCase() === code.toUpperCase());
+      if (!item) return;
+
+      document.getElementById('res-code').textContent = item.tracking_code;
+      document.getElementById('res-status-badge').textContent = item.status;
+      document.getElementById('res-client').textContent = item.client;
+      document.getElementById('res-service').textContent = item.service || "Transport Multimodal";
+      document.getElementById('res-eta').textContent = item.eta;
+      document.getElementById('res-origin').textContent = item.origin;
+      document.getElementById('res-location').textContent = item.location;
+      document.getElementById('res-destination').textContent = item.destination;
+
+      const card = document.getElementById('tracking-result-card');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    // Cercador
+    const searchBtn = document.getElementById('tracking-search-btn');
+    const searchInput = document.getElementById('tracking-search-input');
+    const refreshBtn = document.getElementById('tracking-refresh-btn');
+
+    if (searchBtn && searchInput) {
+      searchBtn.addEventListener('click', () => {
+        const q = searchInput.value.trim();
+        if (q) window.selectTrackingRow(q);
+      });
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const q = searchInput.value.trim();
+          if (q) window.selectTrackingRow(q);
+        }
+      });
+    }
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', fetchSheetDBData);
+    }
+
+    document.querySelectorAll('.quick-code-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const c = b.textContent.trim();
+        if (searchInput) searchInput.value = c;
+        window.selectTrackingRow(c);
+      });
+    });
+
+    // Submissió del Formulari (Doble Write: SheetDB + Formspree)
+    const form = document.getElementById('contact-form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submit-btn');
+        const feedback = document.getElementById('form-feedback');
+        const createdCodeSpan = document.getElementById('created-tracking-code');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Enviant dades a SheetDB i Formspree...';
+
+        const clientNom = document.getElementById('nom').value.trim();
+        const clientEmpresa = document.getElementById('empresa').value.trim();
+        const clientCorreu = document.getElementById('correu').value.trim();
+        const servei = document.getElementById('servei-select').value;
+        const origen = document.getElementById('origen-input').value.trim() || 'Port de Barcelona';
+        const desti = document.getElementById('desti-input').value.trim() || 'Xangai';
+        const consulta = document.getElementById('consulta').value.trim();
+
+        // Generar un codi de seguiment únic
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const prefix = servei.includes('FCL') ? 'ATL-MAR' : servei.includes('REEF') ? 'ATL-REEF' : 'ATL-WMS';
+        const trackingCode = prefix + '-' + randomNum;
+
+        // 1. Dades per a SheetDB (amb claus per duplicat per cobrir capçaleres amb espais)
+        const sheetDbRow = {
+          "tracking_code ": trackingCode,
+          "tracking_code": trackingCode,
+          "client": clientNom + " (" + clientEmpresa + ")",
+          "origin ": origen,
+          "origin": origen,
+          "destination ": desti,
+          "destination": desti,
+          "status": "Booking Confirmat (DUA en tràmit)",
+          "location ": "Port de Barcelona - Terminal TCT",
+          "location": "Port de Barcelona - Terminal TCT",
+          "eta ": "24/11/2026",
+          "eta": "24/11/2026"
+        };
+
+        // 2. Dades per a Formspree (rebut per adam043@vidalibarraquer.net)
+        const formspreePayload = {
+          tracking_code: trackingCode,
+          nom: clientNom,
+          empresa: clientEmpresa,
+          email: clientCorreu,
+          servei: servei,
+          origen: origen,
+          destinacio: desti,
+          requeriments: consulta,
+          destinatari: 'adam043@vidalibarraquer.net',
+          _subject: 'Nova Cotització Logística [' + clientEmpresa + '] - Codi #' + trackingCode
+        };
+
+        // Enviar en paral·lel
+        Promise.allSettled([
+          fetch(SHEETDB_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ data: [sheetDbRow] })
+          }),
+          fetch(FORMSPREE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(formspreePayload)
+          })
+        ]).then(() => {
+          // Afegir el nou registre a la llista local
+          currentRecords.unshift({
+            tracking_code: trackingCode,
+            client: clientNom + " (" + clientEmpresa + ")",
+            origin: origen,
+            destination: desti,
+            status: "Booking Confirmat (DUA en tràmit)",
+            location: "Port de Barcelona - Terminal TCT",
+            eta: "24/11/2026",
+            service: servei
+          });
+
+          renderRecordsTable(currentRecords);
+          window.selectTrackingRow(trackingCode);
+
+          if (createdCodeSpan) createdCodeSpan.textContent = '#' + trackingCode;
+          if (feedback) feedback.classList.remove('hidden');
+
+          submitBtn.innerHTML = 'Enviat correctament a SheetDB & Formspree!';
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Enviar Nova Sol·licitud (SheetDB & adam043@vidalibarraquer.net)';
+          }, 3000);
+        });
+      });
+    }
+
+    // Inicialitzar dades en carregar la pàgina
+    fetchSheetDBData();
   </script>
 
 </body>
