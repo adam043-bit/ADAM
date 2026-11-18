@@ -31,7 +31,8 @@ import {
   Cross,
   Gauge,
   ClipboardCheck,
-  Navigation
+  Navigation,
+  FileSpreadsheet
 } from 'lucide-react';
 import {
   HERO_TELEMETRY_TRUCKS,
@@ -45,6 +46,7 @@ import {
   RoadShipment,
   ColdRangeSpec
 } from './data/pharmaData';
+import Ibuprofen3D from './components/Ibuprofen3D';
 
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xvkkyjgo';
 const SHEETDB_ENDPOINT = 'https://sheetdb.io/api/v1/fst1vl3p3sehx';
@@ -365,12 +367,23 @@ export default function App() {
   const [trackerError, setTrackerError] = useState<string | null>(null);
   const [trackerLoading, setTrackerLoading] = useState(false);
 
+  const navigateToTracking = (code?: string) => {
+    const target = code ? `/tracking?code=${encodeURIComponent(code)}` : '/tracking';
+    if (window.history?.pushState) {
+      window.history.pushState({}, '', target);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.location.href = target;
+    }
+  };
+
   const handleTrackShipment = async (codeOverride?: string) => {
     const query = (codeOverride ?? trackingInput).trim().toUpperCase();
     if (codeOverride) setTrackingInput(codeOverride);
 
     if (!query) {
-      setTrackerError('Introduce un código de expedición válido (ej: MDC-2026-0841) para consultar la telemetría del camión.');
+      setTrackerError('Introduce un código de expedición válido (ej: MDC-2026-4542) para consultar la telemetría del camión.');
       setActiveShipment(null);
       return;
     }
@@ -378,96 +391,99 @@ export default function App() {
     setTrackerLoading(true);
     setTrackerError(null);
 
+    // 1. Consulta en vivo a SheetDB usando la columna real del Excel: codigo_expedicion
+    try {
+      let rowMatch: Record<string, unknown> | null = null;
+
+      try {
+        const searchRes = await fetch(
+          `${SHEETDB_ENDPOINT}/search?codigo_expedicion=${encodeURIComponent(query)}&casesensitive=false`,
+          { cache: 'no-store' }
+        );
+        const searchData = await searchRes.json();
+        if (Array.isArray(searchData) && searchData.length > 0) {
+          rowMatch = searchData[0];
+        }
+      } catch {
+        // Continuar al fallback de tabla completa
+      }
+
+      if (!rowMatch) {
+        const res = await fetch(`${SHEETDB_ENDPOINT}?_nc=${Date.now()}`, { cache: 'no-store' });
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          rowMatch =
+            rows.find((r: Record<string, unknown>) => {
+              const code = String(r.codigo_expedicion ?? r.tracking_code ?? r['tracking_code '] ?? '')
+                .trim()
+                .toUpperCase();
+              return code === query;
+            }) || null;
+        }
+      }
+
+      if (rowMatch) {
+        const getField = (...keys: string[]) => {
+          for (const k of keys) {
+            for (const rk of Object.keys(rowMatch!)) {
+              if (rk.trim().toLowerCase() === k.toLowerCase()) {
+                const v = String(rowMatch![rk] ?? '').trim();
+                if (v) return v;
+              }
+            }
+          }
+          return '';
+        };
+
+        const rawStatus = getField('status', 'estat', 'estado') || 'En magatzem';
+        const s = rawStatus.toLowerCase();
+        const isDelivered = s.includes('lliur') || s.includes('entregad') || s.includes('delivered');
+        const isTransit = s.includes('trànsit') || s.includes('transit') || s.includes('tránsito') || s.includes('ruta');
+        const estadoLabel: RoadShipment['estado'] = isDelivered
+          ? 'Entregado'
+          : isTransit
+            ? 'En ruta'
+            : 'En cámara GDP';
+        const progressPct = isDelivered ? 100 : isTransit ? 50 : 10;
+
+        setActiveShipment({
+          codigo: getField('codigo_expedicion', 'tracking_code') || query,
+          unidad: `Unidad MEDICAM · ${getField('empresa', 'client') || 'Hospital / Lab'}`,
+          vehiculo: 'Semirremolque Frigorífico ATP Clase FRC',
+          origen: getField('origen', 'origin') || 'Base Barcelona ZAL',
+          destino: getField('destino', 'destination') || 'Hospital Destino España',
+          producto: `Cliente: ${getField('empresa', 'client') || 'Hospital España'} · Ubicación: ${getField('location', 'ubicacio') || 'Muelle GDP'}`,
+          loteClinico: `Estado Excel: ${rawStatus}`,
+          rangoObjetivo: '+2 °C a +8 °C (Refrigerado Clínico)',
+          targetMin: 2,
+          targetMax: 8,
+          equipoFrio: 'Carrier Bi-Zona + Sondas EN 12830',
+          estado: estadoLabel,
+          progreso: progressPct,
+          eta: getField('eta', 'data') || 'En tránsito por carretera',
+          sensores: {
+            tempActual: '+4.4 °C',
+            vibracionG: '0.03 G',
+            aperturaPuerta: 'Precintado · 0 aperturas',
+            combustibleReserva: '86 % (Autonomía 800 km)',
+            humedad: '40.0 % HR',
+          },
+          hitos: SHIPMENT_DATABASE['MDC-2026-0841'].hitos,
+          curvaTermica: SHIPMENT_DATABASE['MDC-2026-0912'].curvaTermica,
+        });
+        setTrackerLoading(false);
+        return;
+      }
+    } catch {
+      // Continuar a expediciones locales de demostración
+    }
+
+    // 2. Fallback a expediciones locales de demostración MEDICAM
     const found = SHIPMENT_DATABASE[query];
     if (found) {
       setActiveShipment(found);
       setTrackerLoading(false);
       return;
-    }
-
-    // Fallback a base de datos externa SheetDB
-    try {
-      const res = await fetch(`${SHEETDB_ENDPOINT}?_nc=${Date.now()}`, { cache: 'no-store' });
-      const rows = await res.json();
-      if (Array.isArray(rows) && rows.length > 0) {
-        const firstRow = rows[0] || {};
-        const colKey = Object.keys(firstRow).find((k) => k.trim().toUpperCase() === query);
-        let sheetRecord: Partial<RoadShipment> | null = null;
-
-        if (colKey) {
-          const v: Record<string, string> = {};
-          for (const r of rows) {
-            const label = String(r['tracking_code '] || r.tracking_code || Object.values(r)[0] || '').toLowerCase();
-            const val = String(r[colKey] || '').trim();
-            if (label.includes('origin') || label.includes('origen')) v.origen = val;
-            if (label.includes('destin')) v.destino = val;
-            if (label.includes('status') || label.includes('estat')) v.estado = val;
-            if (label.includes('eta')) v.eta = val;
-          }
-          sheetRecord = {
-            codigo: colKey.trim(),
-            origen: v.origen || 'Barcelona (ZAL Pharma)',
-            destino: v.destino || 'Madrid (Hub Central)',
-            eta: v.eta || '18/11/2026 · 14:30 CET',
-            estado: v.estado?.toLowerCase().includes('lliur') ? 'Entregado' : 'En ruta',
-            progreso: v.estado?.toLowerCase().includes('lliur') ? 100 : 60,
-            sensores: {
-              tempActual: '+4.4 °C',
-              vibracionG: '0.03 G',
-              aperturaPuerta: 'Precintado · 0 aperturas',
-              combustibleReserva: '84 % (Autonomía 780 km)',
-              humedad: '40.0 % HR',
-            },
-          };
-        } else {
-          const rowMatch = rows.find(
-            (r) => String(r.tracking_code || r['tracking_code '] || '').trim().toUpperCase() === query
-          );
-          if (rowMatch) {
-            sheetRecord = {
-              codigo: query,
-              origen: String(rowMatch.origin || rowMatch['origin '] || 'Barcelona (ZAL Pharma)').trim(),
-              destino: String(rowMatch.destination || rowMatch['destination '] || 'Madrid (Hub Central)').trim(),
-              eta: String(rowMatch.eta || rowMatch['eta '] || '18/11/2026').trim(),
-              estado: 'En ruta',
-              progreso: 60,
-              sensores: {
-                tempActual: '+4.5 °C',
-                vibracionG: '0.03 G',
-                aperturaPuerta: 'Precintado · 0 aperturas',
-                combustibleReserva: '88 % (Autonomía 820 km)',
-                humedad: '39.8 % HR',
-              },
-            };
-          }
-        }
-
-        if (sheetRecord) {
-          setActiveShipment({
-            codigo: sheetRecord.codigo || query,
-            unidad: 'Unidad MEDICAM · Tráiler FRC Validado',
-            vehiculo: 'Semirremolque Frigorífico ATP Clase FRC',
-            origen: sheetRecord.origen || 'Base Barcelona ZAL',
-            destino: sheetRecord.destino || 'Hospital Destino España',
-            producto: 'Carga Biofarmacéutica Validada',
-            loteClinico: 'Lote Verificado SheetDB · EU GDP',
-            rangoObjetivo: '+2 °C a +8 °C (Refrigerado Clínico)',
-            targetMin: 2,
-            targetMax: 8,
-            equipoFrio: 'Carrier Bi-Zona + Sondas EN 12830',
-            estado: (sheetRecord.estado as RoadShipment['estado']) || 'En ruta',
-            progreso: sheetRecord.progreso || 60,
-            eta: sheetRecord.eta || 'En tránsito por carretera',
-            sensores: sheetRecord.sensores!,
-            hitos: SHIPMENT_DATABASE['MDC-2026-0841'].hitos,
-            curvaTermica: SHIPMENT_DATABASE['MDC-2026-0912'].curvaTermica,
-          });
-          setTrackerLoading(false);
-          return;
-        }
-      }
-    } catch {
-      // Continuar con error si no existe en SheetDB ni en ejemplos
     }
 
     setTrackerError(`Expedición "${query}" no encontrada en la red de camiones de MEDICAM España.`);
@@ -486,6 +502,15 @@ export default function App() {
   const [quoteCompany, setQuoteCompany] = useState('');
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
   const [quoteConfirmedCode, setQuoteConfirmedCode] = useState<string | null>(null);
+  const [lastSubmittedExcelRow, setLastSubmittedExcelRow] = useState<{
+    codigo_expedicion: string;
+    empresa: string;
+    origen: string;
+    destino: string;
+    status: string;
+    location: string;
+    eta: string;
+  } | null>(null);
 
   // Cálculo dinámico realista de flete por carretera en España
   const effectiveWeight = Math.max(quoteWeight, quotePallets * 280);
@@ -513,6 +538,7 @@ export default function App() {
   };
 
   const selectedUrgency = urgencyRates[quoteUrgency];
+  const selectedColdMeta = COLD_RANGES.find((r) => r.id === quoteTemp) || COLD_RANGES[3];
   const estimatedCost =
     quoteUrgency === 'furgon_urgente'
       ? Math.round(790 * routeDistanceFactor + effectiveWeight * 0.48 * tempMultiplier[quoteTemp])
@@ -520,10 +546,75 @@ export default function App() {
 
   const estimatedHours = Math.round(selectedUrgency.transitBaseHours * routeDistanceFactor);
 
+  // Vista previa ordenada de las 7 columnas exactas del Excel conectado a SheetDB
+  const previewExcelColumns = {
+    codigo_expedicion: quoteConfirmedCode || 'MDC-2026-XXXX (Auto)',
+    empresa: quoteCompany.trim() || 'Laboratorio / Hospital España',
+    origen: quoteOrigin,
+    destino: quoteDest,
+    status: 'En magatzem',
+    location: `Muelle Climatizado · ${quoteOrigin}`,
+    eta: `${estimatedHours}h tránsito carretera · ${quotePallets} palés (${effectiveWeight} kg) · ${selectedColdMeta.rango}`,
+  };
+
+  const syncSheetDbNewestFirst = async (newRow: typeof lastSubmittedExcelRow & {}) => {
+    let existingValidRows: NonNullable<typeof lastSubmittedExcelRow>[] = [];
+    try {
+      const getRes = await fetch(`${SHEETDB_ENDPOINT}?_nc=${Date.now()}`, { cache: 'no-store' });
+      const rawRows = await getRes.json();
+      if (Array.isArray(rawRows)) {
+        existingValidRows = rawRows
+          .filter((r) => String(r?.codigo_expedicion ?? '').trim() !== '')
+          .map((r) => ({
+            codigo_expedicion: String(r.codigo_expedicion ?? '').trim(),
+            empresa: String(r.empresa ?? '').trim(),
+            origen: String(r.origen ?? '').trim(),
+            destino: String(r.destino ?? '').trim(),
+            status: String(r.status ?? '').trim(),
+            location: String(r.location ?? '').trim(),
+            eta: String(r.eta ?? '').trim(),
+          }));
+      }
+    } catch {
+      // Si falla la lectura previa, insertar al menos la nueva cotización
+    }
+
+    if (existingValidRows.length > 0) {
+      await Promise.allSettled(
+        existingValidRows.map((row) =>
+          fetch(
+            `${SHEETDB_ENDPOINT}/codigo_expedicion/${encodeURIComponent(row.codigo_expedicion)}`,
+            { method: 'DELETE' }
+          )
+        )
+      );
+    }
+
+    await fetch(SHEETDB_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        data: [newRow, ...existingValidRows],
+      }),
+    });
+  };
+
   const handleQuoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setQuoteSubmitting(true);
     const newCode = `MDC-2026-${Math.floor(1000 + Math.random() * 8999)}`;
+
+    // Objeto ordenado exactamente según las 7 columnas preescritas del Excel (SheetDB):
+    // 1. codigo_expedicion | 2. empresa | 3. origen | 4. destino | 5. status | 6. location | 7. eta
+    const orderedExcelRow = {
+      codigo_expedicion: newCode,
+      empresa: (quoteCompany || 'Laboratorio / Hospital España').trim(),
+      origen: quoteOrigin,
+      destino: quoteDest,
+      status: 'En magatzem',
+      location: `Muelle Climatizado · ${quoteOrigin}`,
+      eta: `${estimatedHours}h tránsito carretera · ${quotePallets} palés (${effectiveWeight} kg) · ${selectedColdMeta.rango}`,
+    };
 
     try {
       await Promise.allSettled([
@@ -531,47 +622,23 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({
-            codigo_expedicion: newCode,
-            empresa: quoteCompany || 'Laboratorio / Hospital España',
+            ...orderedExcelRow,
             email_cliente: quoteEmail || 'No indicado',
-            origen: quoteOrigin,
-            destino: quoteDest,
-            peso_kg: quoteWeight,
+            peso_bruto_kg: quoteWeight,
             europales: quotePallets,
-            peso_tasable_km: effectiveWeight,
-            rango_termico: quoteTemp,
+            peso_tasable_kg: effectiveWeight,
+            rango_termico: `${selectedColdMeta.nombre} (${selectedColdMeta.rango})`,
             modalidad_camion: selectedUrgency.label,
-            estimacion_eur: `${estimatedCost} €`,
-            tiempo_ruta_h: `${estimatedHours} h`,
+            estimacion_eur: `${estimatedCost} EUR`,
             buzon_comercial: 'comercial@medicam.cat',
             destinatario_academico: 'adam043@vidalibarraquer.net',
             _subject: `Cotització MEDICAM [${newCode}] - ${quoteOrigin} -> ${quoteDest}`,
           }),
         }),
-        fetch(SHEETDB_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({
-            data: [
-              {
-                'tracking_code ': newCode,
-                tracking_code: newCode,
-                client: quoteCompany || 'Cliente MEDICAM España',
-                'origin ': quoteOrigin,
-                origin: quoteOrigin,
-                'destination ': quoteDest,
-                destination: quoteDest,
-                status: 'En cámara GDP',
-                'location ': 'Muelle Climatizado ZAL Barcelona / Madrid',
-                location: 'Muelle Climatizado ZAL Barcelona / Madrid',
-                'eta ': `${estimatedHours}h tránsito carretera`,
-                eta: `${estimatedHours}h tránsito carretera`,
-              },
-            ],
-          }),
-        }),
+        syncSheetDbNewestFirst(orderedExcelRow),
       ]);
     } finally {
+      setLastSubmittedExcelRow(orderedExcelRow);
       setQuoteConfirmedCode(newCode);
       setQuoteSubmitting(false);
     }
@@ -667,12 +734,26 @@ export default function App() {
             <a href="#cotizador" className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
               {t.navQuote}
             </a>
+            <a
+              href="/tracking"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToTracking();
+              }}
+              className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 font-bold text-[#2E741B]"
+            >
+              /tracking
+            </a>
           </nav>
 
           {/* Zona 3: Botón Clave Verde Farmacia */}
           <div className="flex items-center gap-3 shrink-0">
             <a
-              href="#tracker"
+              href="/tracking"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToTracking();
+              }}
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white text-sm font-bold transition-colors whitespace-nowrap shrink-0"
             >
               <Cross className="w-4 h-4 text-[#F5E626]" />
@@ -710,6 +791,17 @@ export default function App() {
                 {item.label}
               </a>
             ))}
+            <a
+              href="/tracking"
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileMenuOpen(false);
+                navigateToTracking();
+              }}
+              className="block px-3 py-2.5 rounded-lg text-sm font-bold text-white bg-[#2E741B]"
+            >
+              Portal Tracking (/tracking)
+            </a>
           </div>
         )}
       </header>
@@ -719,22 +811,22 @@ export default function App() {
         {/* SECCIÓN HERO INSPIRADA EN REFERENCIA FARMACÉUTICA VERDE DUOTONO       */}
         {/* ===================================================================== */}
         <section id="inicio" className="relative bg-[#2E741B] clinical-grid-bg text-white overflow-hidden">
-          {/* Fotografía de camión en duotono verde farmacia cubriendo todo el fondo */}
-          <div className="absolute inset-0 pharma-duotone-wrap pointer-events-none select-none">
+          {/* Fotografía nítida de camión frigorífico a todo color con gradiente equilibrado */}
+          <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
             <img
               src="/src/assets/images/hero_pharma_truck_spain_1795018963010.jpg"
               alt="Camión frigorífico farmacéutico de MEDICAM circulando por autovía española"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover object-center pharma-duotone-img opacity-85"
+              className="w-full h-full object-cover object-right brightness-110 contrast-105 saturate-115 opacity-55"
             />
           </div>
 
-          {/* Degradado verde farmacia con visibilidad de carretera y textura clínica en todo el ancho */}
+          {/* Degradado verde farmacia con alto contraste para lectura a la izquierda y foto clara a la derecha */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                'linear-gradient(105deg, rgba(35, 92, 22, 0.90) 0%, rgba(46, 116, 27, 0.80) 46%, rgba(46, 116, 27, 0.65) 72%, rgba(92, 168, 32, 0.45) 100%)',
+                'linear-gradient(100deg, rgba(23, 62, 13, 0.94) 0%, rgba(36, 94, 21, 0.84) 44%, rgba(46, 116, 27, 0.45) 72%, rgba(46, 116, 27, 0.18) 100%)',
             }}
           />
 
@@ -756,17 +848,17 @@ export default function App() {
             <path
               d="M 460 720 C 660 470, 940 270, 1440 110 L 1440 230 C 1020 380, 790 530, 620 720 Z"
               fill="#A3E635"
-              fillOpacity="0.22"
+              fillOpacity="0.18"
             />
             <path
               d="M 730 720 C 890 530, 1110 385, 1440 285 L 1440 365 C 1170 465, 975 575, 845 720 Z"
               fill="#F5E626"
-              fillOpacity="0.16"
+              fillOpacity="0.14"
             />
           </svg>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               {/* Columna Izquierda: Titular Blanco Fuerte + Destacado Amarillo + Lista Hospitales */}
               <div className="lg:col-span-7 flex flex-col justify-center">
                 <div className="text-xs font-mono font-semibold text-white/90 mb-3">
@@ -777,7 +869,7 @@ export default function App() {
                   “{t.heroTitle}”
                 </h1>
 
-                {/* Bloque destacado en Amarillo Lima Farmacéutico como la fecha del cartel */}
+                {/* Bloque destacado en Amarillo Lima Farmacéutico */}
                 <p className="mt-5 text-xl sm:text-2xl font-bold text-[#F5E626] tracking-tight">
                   {t.heroHighlight}
                 </p>
@@ -807,7 +899,7 @@ export default function App() {
                   </a>
                   <a
                     href="#tracker"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/75 bg-[#173E0D]/70 hover:bg-[#173E0D] text-white font-bold text-sm transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/75 bg-[#173E0D]/80 hover:bg-[#173E0D] text-white font-bold text-sm transition-colors whitespace-nowrap"
                   >
                     <Search className="w-4 h-4 text-[#F5E626]" />
                     {t.heroSecondaryCta}
@@ -815,40 +907,35 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Columna Derecha: Consola Verde Bosque de Telemetría Satelital */}
+              {/* Columna Derecha: Ibuprofeno 600 mg en 3D Interactivo giratorio como un globo */}
               <div className="lg:col-span-5 flex flex-col justify-center">
-                <div className="bg-[#173E0D]/95 border border-[#84CC16]/45 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex items-center justify-between gap-2 pb-4 border-b border-white/15">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-lg bg-[#2E741B] border border-[#A3E635]/40 flex items-center justify-center">
-                        <HeartPulse className="w-5 h-5 text-[#F5E626]" />
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-[#A3E635] block">Telemetría Satelital en Carretera</span>
-                        <h2 className="text-sm font-bold text-white font-mono">
-                          {currentHeroTruck.unidad}
-                        </h2>
-                      </div>
-                    </div>
+                <Ibuprofen3D lang={lang} />
+              </div>
+            </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setTelemetryLive(!telemetryLive)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#2E741B] border border-[#F5E626]/60 text-xs font-mono text-[#F5E626] hover:bg-[#235A14] transition-colors cursor-pointer"
-                    >
-                      <Activity className="w-3.5 h-3.5" />
-                      {telemetryLive ? 'LIVE' : 'PAUSA'}
-                    </button>
+            {/* Consola Horizontal de Telemetría Satelital en Carretera */}
+            <div className="mt-8 bg-[#173E0D]/92 border border-[#A3E635]/40 rounded-2xl p-4 sm:p-5 shadow-xl">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/15">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-[#2E741B] border border-[#A3E635]/40 flex items-center justify-center shrink-0">
+                    <HeartPulse className="w-5 h-5 text-[#F5E626]" />
                   </div>
+                  <div>
+                    <span className="text-[11px] text-[#A3E635] block">Telemetría Satelital en Carretera</span>
+                    <h2 className="text-sm font-bold text-white font-mono">
+                      {currentHeroTruck.unidad}
+                    </h2>
+                  </div>
+                </div>
 
-                  {/* Selector de camiones activos */}
-                  <div className="flex items-center gap-1 p-1 bg-[#102C09] rounded-lg my-4 border border-white/15">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1 p-1 bg-[#102C09] rounded-lg border border-white/15">
                     {HERO_TELEMETRY_TRUCKS.map((tr, i) => (
                       <button
                         key={tr.id}
                         type="button"
                         onClick={() => setHeroTruckIdx(i)}
-                        className={`flex-1 py-1.5 px-2 text-xs font-mono rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                        className={`py-1.5 px-3 text-xs font-mono rounded-md transition-colors cursor-pointer whitespace-nowrap ${
                           heroTruckIdx === i
                             ? 'bg-[#F5E626] text-[#14360E] font-extrabold'
                             : 'text-white/80 hover:text-white'
@@ -859,65 +946,74 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Visualizador esquemático de ruta por autovía */}
-                  <div className="p-3 rounded-lg bg-[#215314] border border-white/15 mb-3">
-                    <div className="flex items-center justify-between text-xs font-mono text-white">
-                      <span>{currentHeroTruck.origenCode}</span>
-                      <div className="flex-1 mx-3 flex items-center gap-2">
-                        <span className="h-px flex-1 bg-white/40" />
-                        <Truck className="w-3.5 h-3.5 text-[#F5E626]" />
-                        <span className="h-px flex-1 border-t border-dashed border-white/40" />
-                      </div>
-                      <span className="text-[#F5E626] font-bold">{currentHeroTruck.destinoCode}</span>
+                  <button
+                    type="button"
+                    onClick={() => setTelemetryLive(!telemetryLive)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2E741B] border border-[#F5E626]/60 text-xs font-mono text-[#F5E626] hover:bg-[#235A14] transition-colors cursor-pointer"
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    {telemetryLive ? 'LIVE' : 'PAUSA'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                <div className="lg:col-span-4 p-3 rounded-lg bg-[#215314] border border-white/15">
+                  <div className="flex items-center justify-between text-xs font-mono text-white">
+                    <span>{currentHeroTruck.origenCode}</span>
+                    <div className="flex-1 mx-3 flex items-center gap-2">
+                      <span className="h-px flex-1 bg-white/40" />
+                      <Truck className="w-3.5 h-3.5 text-[#F5E626]" />
+                      <span className="h-px flex-1 border-t border-dashed border-white/40" />
                     </div>
-                    <div className="mt-1.5 flex items-center justify-between text-[11px] text-white/85 gap-2">
-                      <span>{currentHeroTruck.ruta}</span>
-                      <span className="text-[#A3E635] font-semibold text-right">{currentHeroTruck.carga}</span>
+                    <span className="text-[#F5E626] font-bold">{currentHeroTruck.destinoCode}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-white/85 gap-2">
+                    <span>{currentHeroTruck.ruta}</span>
+                    <span className="text-[#A3E635] font-semibold text-right">{currentHeroTruck.carga}</span>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3 rounded-lg bg-[#215314] border border-white/15">
+                    <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                      <ThermometerSnowflake className="w-3.5 h-3.5 text-[#F5E626]" />
+                      Temp. Caja
+                    </span>
+                    <div className="mt-1 flex items-baseline gap-1 font-mono">
+                      <span className="text-xl font-bold text-[#F5E626]">{liveHeroTemp}</span>
+                      <span className="text-xs text-white/85">°C</span>
                     </div>
                   </div>
 
-                  {/* Cuadrícula de 4 parámetros telemétricos clínicos */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
-                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
-                        <ThermometerSnowflake className="w-3.5 h-3.5 text-[#F5E626]" />
-                        Temp. Caja
-                      </span>
-                      <div className="mt-1 flex items-baseline gap-1 font-mono">
-                        <span className="text-2xl font-bold text-[#F5E626]">{liveHeroTemp}</span>
-                        <span className="text-xs text-white/85">°C</span>
-                      </div>
+                  <div className="p-3 rounded-lg bg-[#215314] border border-white/15">
+                    <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5 text-[#A3E635]" />
+                      Velocidad Ruta
+                    </span>
+                    <div className="mt-1 font-mono">
+                      <span className="text-lg font-bold text-white">{currentHeroTruck.velocidad}</span>
                     </div>
+                  </div>
 
-                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
-                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
-                        <Gauge className="w-3.5 h-3.5 text-[#A3E635]" />
-                        Velocidad Ruta
-                      </span>
-                      <div className="mt-1 flex items-baseline gap-1 font-mono">
-                        <span className="text-xl font-bold text-white">{currentHeroTruck.velocidad}</span>
-                      </div>
+                  <div className="p-3 rounded-lg bg-[#215314] border border-white/15">
+                    <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                      <FlaskConical className="w-3.5 h-3.5 text-[#A3E635]" />
+                      Humedad Relativa
+                    </span>
+                    <div className="mt-1 font-mono">
+                      <span className="text-lg font-bold text-white">{currentHeroTruck.humedad}</span>
                     </div>
+                  </div>
 
-                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
-                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
-                        <FlaskConical className="w-3.5 h-3.5 text-[#A3E635]" />
-                        Humedad Relativa
-                      </span>
-                      <div className="mt-1 flex items-baseline gap-1 font-mono">
-                        <span className="text-xl font-bold text-white">{currentHeroTruck.humedad}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
-                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
-                        <ShieldPlus className="w-3.5 h-3.5 text-[#F5E626]" />
-                        Precinto Sanitario
-                      </span>
-                      <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#A3E635]">
-                        <Lock className="w-3.5 h-3.5 shrink-0" />
-                        <span>{currentHeroTruck.sello}</span>
-                      </div>
+                  <div className="p-3 rounded-lg bg-[#215314] border border-white/15">
+                    <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                      <ShieldPlus className="w-3.5 h-3.5 text-[#F5E626]" />
+                      Precinto Sanitario
+                    </span>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#A3E635]">
+                      <Lock className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{currentHeroTruck.sello}</span>
                     </div>
                   </div>
                 </div>
@@ -925,7 +1021,7 @@ export default function App() {
             </div>
 
             {/* Franja inferior de métricas verificadas en carretera */}
-            <div className="mt-12 pt-8 border-t border-white/20 grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="mt-10 pt-7 border-t border-white/20 grid grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
                 <div className="text-2xl font-bold font-mono text-white">99.97 %</div>
                 <div className="text-xs text-white/85 mt-1">Estabilidad térmica anual en camiones ATP FRC</div>
@@ -1018,16 +1114,16 @@ export default function App() {
                 </div>
               </article>
 
-              {/* Tarjeta Bento 03 (5 cols - Fotografía en Duotono Verde Farmacia) */}
+              {/* Tarjeta Bento 03 (5 cols - Fotografía Nítida a Todo Color) */}
               <article className="lg:col-span-5 bg-[#F4F7F2] rounded-2xl border border-[#2E741B]/20 overflow-hidden flex flex-col">
-                <div className="h-48 pharma-duotone-wrap relative overflow-hidden">
+                <div className="h-56 bg-slate-100 relative overflow-hidden">
                   <img
                     src="/src/assets/images/fleet_clinical_delivery_van_1795018963295.jpg"
                     alt="Furgón clínico y camión farmacéutico MEDICAM entregando medicamentos en hospital universitario español"
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover pharma-duotone-img"
+                    className="w-full h-full object-cover object-center brightness-[1.03] contrast-[1.06] saturate-[1.08]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#173E0D]/70 via-transparent to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                 </div>
                 <div className="p-7 flex-1 flex flex-col justify-between">
                   <div>
@@ -1486,13 +1582,14 @@ export default function App() {
                   className="bg-white rounded-2xl border border-[#2E741B]/20 overflow-hidden flex flex-col justify-between"
                 >
                   <div>
-                    <div className="h-48 pharma-duotone-wrap overflow-hidden relative">
+                    <div className="h-56 bg-slate-100 overflow-hidden relative">
                       <img
                         src={item.imagen}
                         alt={item.modelo}
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover pharma-duotone-img"
+                        className="w-full h-full object-cover object-center brightness-[1.03] contrast-[1.06] saturate-[1.08]"
                       />
+                      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
                     </div>
                     <div className="p-6">
                       <div className="text-xs font-mono text-[#2E741B] font-bold">
@@ -1537,17 +1634,31 @@ export default function App() {
         {/* ===================================================================== */}
         <section id="tracker" className="py-20 bg-[#2E741B] clinical-grid-bg text-white border-b border-[#225814]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mb-10">
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-[#F5E626] uppercase tracking-wider">
-                <Activity className="w-4 h-4" />
-                Live Cold Chain Truck Tracker
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 text-xs font-bold text-[#F5E626] uppercase tracking-wider">
+                  <Activity className="w-4 h-4" />
+                  Live Cold Chain Truck Tracker
+                </div>
+                <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                  Rastreador GPS de Camiones y Telemetría Clínica en Vivo
+                </h2>
+                <p className="mt-3 text-white/90 text-base">
+                  Audita cualquier expedición terrestre de MEDICAM en España o abre el portal dedicado <span className="font-mono text-[#F5E626]">/tracking</span> conectado a la base de datos Excel en SheetDB.
+                </p>
               </div>
-              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-                Rastreador GPS de Camiones y Telemetría Clínica en Vivo
-              </h2>
-              <p className="mt-3 text-white/90 text-base">
-                Audita cualquier expedición terrestre de MEDICAM en España para verificar lote médico, temperatura interna de caja, vibración de suspensión y apertura de puertas.
-              </p>
+              <a
+                href="/tracking"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateToTracking(activeShipment?.codigo);
+                }}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#F5E626] hover:bg-[#E5D618] text-[#14360E] font-extrabold text-xs sm:text-sm transition-colors shrink-0 self-start md:self-auto"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Abrir Portal /tracking (Excel En Vivo)
+                <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
 
             <div className="bg-[#173E0D] rounded-2xl border border-[#84CC16]/35 p-5 sm:p-6 mb-8">
@@ -1589,7 +1700,7 @@ export default function App() {
 
               <div className="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center gap-2 text-xs">
                 <span className="text-white/85">Expediciones en ruta (España):</span>
-                {Object.keys(SHIPMENT_DATABASE).map((code) => (
+                {['MDC-2026-4542', ...Object.keys(SHIPMENT_DATABASE)].map((code) => (
                   <button
                     key={code}
                     type="button"
@@ -1900,15 +2011,56 @@ export default function App() {
                     </div>
                   </div>
 
-                  {quoteConfirmedCode && (
-                    <div className="p-4 rounded-lg bg-[#2E741B]/10 border border-[#2E741B]/35 text-[#14360E] text-xs space-y-1">
-                      <div className="font-bold flex items-center gap-1.5 text-sm text-[#2E741B]">
-                        <CheckCircle2 className="w-4 h-4 text-[#2E741B]" />
-                        Reserva de camión registrada ({quoteConfirmedCode})
+                  {quoteConfirmedCode && lastSubmittedExcelRow && (
+                    <div className="p-4 sm:p-5 rounded-xl bg-[#2E741B]/10 border border-[#2E741B]/35 text-[#14360E] text-xs space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-bold flex items-center gap-1.5 text-sm text-[#2E741B]">
+                          <CheckCircle2 className="w-4 h-4 text-[#2E741B]" />
+                          Reserva registrada y sincronizada con Excel ({quoteConfirmedCode})
+                        </div>
+                        <a
+                          href={`/tracking?code=${encodeURIComponent(quoteConfirmedCode)}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigateToTracking(quoteConfirmedCode);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white font-bold text-xs transition-colors"
+                        >
+                          Localitzar a /tracking
+                          <ArrowRight className="w-3.5 h-3.5 text-[#F5E626]" />
+                        </a>
                       </div>
                       <p>
-                        La solicitud se ha enviado a <strong>comercial@medicam.cat</strong> (y respaldo académico) y ha quedado disponible en el rastreador de flota.
+                        Enviado a <strong>comercial@medicam.cat</strong> y guardado en <strong>SheetDB Excel</strong> en el orden exacto de columnas:
                       </p>
+                      <div className="overflow-x-auto rounded-lg border border-[#2E741B]/25 bg-white">
+                        <table className="w-full text-left text-[11px]">
+                          <thead className="bg-[#173E0D] text-white font-mono">
+                            <tr>
+                              <th className="py-1.5 px-2.5">#</th>
+                              <th className="py-1.5 px-2.5">Columna Excel</th>
+                              <th className="py-1.5 px-2.5">Valor Enviado desde Cotizador</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {[
+                              { idx: 1, col: 'codigo_expedicion', val: lastSubmittedExcelRow.codigo_expedicion },
+                              { idx: 2, col: 'empresa', val: lastSubmittedExcelRow.empresa },
+                              { idx: 3, col: 'origen', val: lastSubmittedExcelRow.origen },
+                              { idx: 4, col: 'destino', val: lastSubmittedExcelRow.destino },
+                              { idx: 5, col: 'status', val: lastSubmittedExcelRow.status },
+                              { idx: 6, col: 'location', val: lastSubmittedExcelRow.location },
+                              { idx: 7, col: 'eta', val: lastSubmittedExcelRow.eta },
+                            ].map((item) => (
+                              <tr key={item.col}>
+                                <td className="py-1.5 px-2.5 font-mono font-bold text-[#2E741B]">{item.idx}</td>
+                                <td className="py-1.5 px-2.5 font-mono font-semibold text-[#14360E]">{item.col}</td>
+                                <td className="py-1.5 px-2.5 text-slate-700 font-medium">{item.val}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
 
@@ -1955,6 +2107,33 @@ export default function App() {
                   <div className="flex justify-between">
                     <span className="text-white/80">Gestión Comercial:</span>
                     <strong className="text-[#A3E635] font-mono">comercial@medicam.cat</strong>
+                  </div>
+                </div>
+
+                {/* Vista previa en vivo del orden exacto de las 7 columnas enviadas al Excel */}
+                <div className="p-4 rounded-xl bg-[#102C09] border border-[#A3E635]/30 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#F5E626] font-bold pb-1.5 border-b border-white/10">
+                    <span className="inline-flex items-center gap-1.5">
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      Columnas Excel Preescritas (1 &rarr; 7)
+                    </span>
+                    <span className="text-[#A3E635]">SheetDB Sync</span>
+                  </div>
+                  <div className="space-y-1.5 text-[11px]">
+                    {[
+                      { k: '1. codigo_expedicion', v: previewExcelColumns.codigo_expedicion },
+                      { k: '2. empresa', v: previewExcelColumns.empresa },
+                      { k: '3. origen', v: previewExcelColumns.origen },
+                      { k: '4. destino', v: previewExcelColumns.destino },
+                      { k: '5. status', v: previewExcelColumns.status },
+                      { k: '6. location', v: previewExcelColumns.location },
+                      { k: '7. eta', v: previewExcelColumns.eta },
+                    ].map((row) => (
+                      <div key={row.k} className="flex justify-between gap-3">
+                        <span className="font-mono text-[#A3E635] shrink-0">{row.k}:</span>
+                        <span className="text-white/90 text-right truncate">{row.v}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -2095,6 +2274,16 @@ export default function App() {
             </div>
 
             <div className="flex flex-wrap items-center gap-5">
+              <a
+                href="/tracking"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateToTracking();
+                }}
+                className="font-mono font-bold text-[#F5E626] hover:underline"
+              >
+                Portal /tracking
+              </a>
               <button type="button" onClick={() => setLegalModal('gdp')} className="hover:text-[#F5E626] transition-colors cursor-pointer">
                 Manual Calidad GDP
               </button>

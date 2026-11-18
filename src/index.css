@@ -20,16 +20,6 @@
   background-size: 36px 36px;
 }
 
-/* Tratamiento duotono verde farmacia sobre fotografía real (sin sobreescribir position de Tailwind) */
-.pharma-duotone-wrap {
-  background-color: #2E741B;
-}
-
-.pharma-duotone-img {
-  filter: grayscale(100%) contrast(1.12) brightness(0.96);
-  mix-blend-mode: multiply;
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
