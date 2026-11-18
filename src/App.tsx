@@ -1,2370 +1,2157 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldCheck,
-  FileText,
+  Truck,
+  ThermometerSnowflake,
   Phone,
-  Mail,
-  MapPin,
-  Clock,
+  Globe,
+  Search,
+  CheckCircle2,
+  AlertTriangle,
+  BatteryCharging,
+  Lock,
+  Activity,
+  Calculator,
   ArrowRight,
   Menu,
   X,
-  CheckCircle2,
-  Globe2,
-  ChevronRight,
-  AlertCircle,
-  Ship,
-  Truck,
-  Warehouse,
-  Thermometer,
-  Calculator,
-  Compass,
-  Layers,
-  ExternalLink,
-  Info,
-  Database,
-  Search,
+  MapPin,
+  GraduationCap,
   RefreshCw,
-  PackageCheck
+  Award,
+  Mail,
+  Stethoscope,
+  Syringe,
+  Pill,
+  HeartPulse,
+  Microscope,
+  FlaskConical,
+  Dna,
+  Hospital,
+  ShieldPlus,
+  Cross,
+  Gauge,
+  ClipboardCheck,
+  Navigation
 } from 'lucide-react';
-import TrackingPage from './app/tracking/page';
+import {
+  HERO_TELEMETRY_TRUCKS,
+  SPAIN_HUBS,
+  COLD_RANGES,
+  FLEET_ITEMS,
+  SHIPMENT_DATABASE,
+  REGULATIONS,
+  CONTINGENCY_PROTOCOLS,
+  HUB_NETWORK,
+  RoadShipment,
+  ColdRangeSpec
+} from './data/pharmaData';
 
-const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/fst1vl3p3sehx';
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xvkkyjgo';
+const SHEETDB_ENDPOINT = 'https://sheetdb.io/api/v1/fst1vl3p3sehx';
 
-// Logotip Corporatiu ADAM TRANSPORT AND LOGISTIC:
-// Hexàgon isomètric de transport multimodal amb monògram "A" estilitzat en gradient morat i rosa
-function BrandLogo({ className = "w-10 h-10" }: { className?: string }) {
+const UI_COPY = {
+  es: {
+    deskStatus: 'Centro Operativo Farmacéutico España activo',
+    operacionesLabel: 'Tráfico España:',
+    navServices: 'Servicios',
+    navCorridors: 'Rutas España',
+    navSpectrum: 'Cadena de Frío',
+    navFleet: 'Flota',
+    navQuote: 'Cotizador',
+    trackCta: 'Rastrear Camión',
+    heroEyebrow: 'medicam.cat · Red Oficial de Transporte Sanitario en España · ATP FRC & AEMPS',
+    heroTitle: 'ENTREGA DE MEDICAMENTOS HOSPITALARIOS EN CAMIÓN FRIGORÍFICO',
+    heroHighlight: 'Servicio Continuo Península y Baleares · -196 °C a +25 °C',
+    heroPrimaryCta: 'Cotizar Envío en Camión',
+    heroSecondaryCta: 'Rastrear Expedición',
+    academicNotice: 'Web Académica · Proyecto educativo sin actividad comercial real',
+  },
+  ca: {
+    deskStatus: 'Centre Operatiu Farmacèutic Espanya actiu',
+    operacionesLabel: 'Tràfic i Operacions:',
+    navServices: 'Serveis',
+    navCorridors: 'Rutes Espanya',
+    navSpectrum: 'Cadena de Fred',
+    navFleet: 'Flota',
+    navQuote: 'Cotitzador',
+    trackCta: 'Rastrejar Camió',
+    heroEyebrow: 'medicam.cat · Xarxa Oficial de Transport Sanitari a Espanya · ATP FRC & AEMPS',
+    heroTitle: 'LLIURAMENT DE MEDICAMENTS HOSPITALARIS EN CAMIÓ FRIGORÍFIC',
+    heroHighlight: 'Servei Continu Península i Balears · -196 °C a +25 °C',
+    heroPrimaryCta: 'Demanar Cotització',
+    heroSecondaryCta: 'Rastrejar Expedició',
+    academicNotice: 'Web Acadèmica · Projecte educatiu sense activitat comercial real',
+  },
+  en: {
+    deskStatus: 'Spain Pharmaceutical Operations Desk active',
+    operacionesLabel: 'Traffic Control:',
+    navServices: 'Services',
+    navCorridors: 'Spain Routes',
+    navSpectrum: 'Cold Chain',
+    navFleet: 'Fleet',
+    navQuote: 'Quote',
+    trackCta: 'Track Truck',
+    heroEyebrow: 'medicam.cat · Official Spanish Pharma Road Network · ATP FRC & AEMPS',
+    heroTitle: 'HOSPITAL MEDICATION DELIVERY BY REFRIGERATED PHARMA TRUCK',
+    heroHighlight: '24h Iberian & Balearic Coverage · -196 °C to +25 °C',
+    heroPrimaryCta: 'Request Road Quote',
+    heroSecondaryCta: 'Track Shipment',
+    academicNotice: 'Academic Website · Educational project (non-commercial)',
+  },
+};
+
+/* Emblema farmacéutico inspirado en la Copa de Higía y la Cruz de Farmacia */
+function PharmacyChaliceEmblem({ dark = false }: { dark?: boolean }) {
+  const strokeColor = dark ? '#FFFFFF' : '#14360E';
+  const accentColor = dark ? '#F5E626' : '#2E741B';
   return (
-    <div className={`${className} rounded-xl bg-gradient-to-br from-purple-700 via-fuchsia-600 to-pink-500 p-0.5 shadow-md shadow-purple-950/20 group-hover:scale-105 transition-transform flex items-center justify-center shrink-0`}>
-      <div className="w-full h-full bg-purple-950 rounded-[10px] flex items-center justify-center p-1.5">
-        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          {/* Hexàgon exterior de contenidor / càrrega global */}
-          <path d="M20 3L35 11.66V28.34L20 37L5 28.34V11.66L20 3Z" stroke="#f472b6" strokeWidth="2.4" strokeLinejoin="round" />
-          {/* Vèrtexs interiors 3D de cub multimodal */}
-          <path d="M20 3V20M35 11.66L20 20M5 11.66L20 20" stroke="#c084fc" strokeWidth="1.8" strokeLinejoin="round" />
-          <path d="M20 20V37" stroke="#e879f9" strokeWidth="1.8" strokeDasharray="2 2" />
-          {/* Monògram "A" i fletxa d'enllaç multimodal */}
-          <path d="M14 27L20 14L26 27" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M16.5 22.5H23.5" stroke="#f472b6" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="20" cy="14" r="1.5" fill="#fbcfe8" />
+    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 shrink-0">
+      <circle cx="22" cy="24" r="14" stroke={strokeColor} strokeWidth="2.3" />
+      <circle cx="22" cy="24" r="6" stroke={strokeColor} strokeWidth="2" />
+      <path d="M16 32V24C16 20.7 18.7 18 22 18C25.3 18 28 20.7 28 24V32" stroke={strokeColor} strokeWidth="2.1" strokeLinecap="round" />
+      <path d="M14.5 11.5H29.5C28.5 15.5 25.5 17.8 22 17.8C18.5 17.8 15.5 15.5 14.5 11.5Z" stroke={strokeColor} strokeWidth="2.1" strokeLinejoin="round" />
+      <path d="M22 11.5V6.5C22 4.8 23.6 3.8 25.4 4.3C27 4.7 27.6 6.2 26.8 7.6C25.9 9 23.2 9.4 22 11.5Z" stroke={accentColor} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="22" cy="24" r="2.2" fill={accentColor} />
+    </svg>
+  );
+}
+
+/* Separador clínico minimalista con traza verde farmacia */
+function MedicalPulseDivider() {
+  return (
+    <div className="w-full flex items-center justify-center py-1 bg-[#F4F7F2]" aria-hidden="true">
+      <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8 flex items-center gap-4">
+        <span className="h-px flex-1 bg-[#2E741B]/20" />
+        <svg viewBox="0 0 64 20" fill="none" className="w-14 h-4 text-[#2E741B]/70 shrink-0">
+          <path
+            d="M0 10H18L23 3L29 17L35 6L39 10H64"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
+        <span className="h-px flex-1 bg-[#2E741B]/20" />
       </div>
     </div>
   );
 }
 
-interface ProductModalData {
-  id: string;
-  nomTecnic: string;
-  refInterna: string;
-  codiTecnic: string;
-  normativa: string;
-  categoria: 'maritim' | 'terrestre' | 'magatzem';
-  descripcioCompleta: string;
-  imatge: string;
-  fallbackImatge: string;
-  especificacions: {
-    dimensions: string;
-    volum: string;
-    tara: string;
-    payload: string;
-    capacitatPalets: string;
-    temperatura?: string;
-    incoterms?: string;
-    documentacio: string;
-    certificats: string;
-  };
-  avantatges: string[];
+function getColdRangeIcon(id: ColdRangeSpec['id'], active: boolean) {
+  const cls = `w-4 h-4 shrink-0 ${active ? 'text-[#F5E626]' : 'text-[#2E741B]'}`;
+  switch (id) {
+    case 'criogenico':
+      return <Dna className={cls} />;
+    case 'ultracongelado':
+      return <FlaskConical className={cls} />;
+    case 'congelado':
+      return <ThermometerSnowflake className={cls} />;
+    case 'refrigerado':
+      return <Syringe className={cls} />;
+    case 'ambiente':
+      return <Pill className={cls} />;
+  }
 }
 
-interface TrackingItem {
-  tracking_code: string;
-  client: string;
-  origin: string;
-  destination: string;
-  status: string;
-  location: string;
-  eta: string;
-  service?: string;
-  incoterm?: string;
-  date?: string;
-  stage: number; // 1: Booking, 2: DUA OEA, 3: En trànsit, 4: Lliurat
+/* Gráfica lineal interactiva SVG de estabilidad térmica durante el trayecto en camión */
+function ThermalStabilityChart({
+  points,
+  targetMin,
+  targetMax,
+}: {
+  points: { hora: string; temp: number; fase: string }[];
+  targetMin: number;
+  targetMax: number;
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  const width = 640;
+  const height = 220;
+  const padL = 54;
+  const padR = 24;
+  const padT = 24;
+  const padB = 34;
+
+  const temps = points.map((p) => p.temp);
+  const rawMin = Math.min(...temps, targetMin);
+  const rawMax = Math.max(...temps, targetMax);
+  const margin = Math.max(1.5, (rawMax - rawMin) * 0.22);
+  const yMin = rawMin - margin;
+  const yMax = rawMax + margin;
+
+  const xScale = (i: number) =>
+    padL + (i / Math.max(1, points.length - 1)) * (width - padL - padR);
+  const yScale = (t: number) =>
+    padT + ((yMax - t) / Math.max(0.1, yMax - yMin)) * (height - padT - padB);
+
+  const pathD = points
+    .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${xScale(idx).toFixed(1)} ${yScale(p.temp).toFixed(1)}`)
+    .join(' ');
+
+  const bandTop = yScale(targetMax);
+  const bandBottom = yScale(targetMin);
+  const bandHeight = Math.max(4, bandBottom - bandTop);
+
+  const activeIdx = hoverIdx !== null ? hoverIdx : points.length - 1;
+  const activePoint = points[activeIdx];
+
+  return (
+    <div className="relative w-full">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 text-xs">
+        <div className="flex items-center gap-4 text-slate-600">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[#14360E]">
+            <span className="w-3 h-0.5 bg-[#2E741B] inline-block" />
+            Sonda Caja Isotérmica
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-[#2E741B] font-medium">
+            <span className="w-3 h-2.5 bg-[#2E741B]/15 border border-[#2E741B]/45 inline-block rounded-xs" />
+            Banda Validada ({targetMin} °C / {targetMax} °C)
+          </span>
+        </div>
+        {activePoint && (
+          <div className="font-mono text-xs bg-[#173E0D] text-white px-2.5 py-1 rounded">
+            {activePoint.hora} · {activePoint.fase}: <strong className="text-[#F5E626]">{activePoint.temp.toFixed(1)} °C</strong>
+          </div>
+        )}
+      </div>
+
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-52 sm:h-56 bg-[#F4F7F2] rounded-lg border border-[#2E741B]/20 cursor-crosshair select-none"
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <rect
+          x={padL}
+          y={bandTop}
+          width={width - padL - padR}
+          height={bandHeight}
+          fill="#2E741B"
+          fillOpacity="0.14"
+        />
+        <line
+          x1={padL}
+          y1={bandTop}
+          x2={width - padR}
+          y2={bandTop}
+          stroke="#2E741B"
+          strokeWidth="1"
+          strokeDasharray="4 4"
+        />
+        <line
+          x1={padL}
+          y1={bandBottom}
+          x2={width - padR}
+          y2={bandBottom}
+          stroke="#2E741B"
+          strokeWidth="1"
+          strokeDasharray="4 4"
+        />
+
+        {[yMax, (yMax + yMin) / 2, yMin].map((val, idx) => (
+          <g key={idx}>
+            <line
+              x1={padL}
+              y1={yScale(val)}
+              x2={width - padR}
+              y2={yScale(val)}
+              stroke="#DCE5D7"
+              strokeWidth="1"
+            />
+            <text
+              x={padL - 8}
+              y={yScale(val) + 3}
+              textAnchor="end"
+              className="fill-slate-600 text-[10px] font-mono"
+            >
+              {val.toFixed(0)}°
+            </text>
+          </g>
+        ))}
+
+        <path
+          d={pathD}
+          fill="none"
+          stroke="#2E741B"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {points.map((p, idx) => {
+          const cx = xScale(idx);
+          const cy = yScale(p.temp);
+          const isSelected = idx === activeIdx;
+          return (
+            <g key={p.hora} onMouseEnter={() => setHoverIdx(idx)}>
+              {isSelected && (
+                <line
+                  x1={cx}
+                  y1={padT}
+                  x2={cx}
+                  y2={height - padB}
+                  stroke="#173E0D"
+                  strokeOpacity="0.3"
+                  strokeDasharray="3 3"
+                />
+              )}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={isSelected ? 5.5 : 3.5}
+                fill={isSelected ? '#F5E626' : '#2E741B'}
+                stroke="#14360E"
+                strokeWidth="1.5"
+              />
+              <text
+                x={cx}
+                y={height - 10}
+                textAnchor="middle"
+                className="fill-slate-600 text-[10px] font-mono"
+              >
+                {p.hora}
+              </text>
+              <rect
+                x={cx - 24}
+                y={padT}
+                width={48}
+                height={height - padT - padB}
+                fill="transparent"
+              />
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
 }
 
 export default function App() {
+  const [lang, setLang] = useState<'es' | 'ca' | 'en'>('es');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<'tots' | 'maritim' | 'terrestre' | 'magatzem'>('tots');
-  const [selectedProduct, setSelectedProduct] = useState<ProductModalData | null>(null);
-  const [legalModal, setLegalModal] = useState<'avis' | 'privacitat' | 'cookies' | 'condicions' | null>(null);
 
-  // Navegació de la pàgina de seguiment /tracking
-  const [currentRoute, setCurrentRoute] = useState<'home' | 'tracking'>(() => {
-    if (typeof window !== 'undefined') {
-      const p = window.location.pathname;
-      const h = window.location.hash;
-      if (p === '/tracking' || h === '#/tracking' || h === '#tracking-page') {
-        return 'tracking';
-      }
-    }
-    return 'home';
-  });
+  // 1. Telemetría Hero en tiempo real de unidades de camión
+  const [heroTruckIdx, setHeroTruckIdx] = useState(0);
+  const [telemetryLive, setTelemetryLive] = useState(true);
+  const [telemetryTick, setTelemetryTick] = useState(0);
 
   useEffect(() => {
-    const handlePopState = () => {
-      const p = window.location.pathname;
-      const h = window.location.hash;
-      if (p === '/tracking' || h === '#/tracking' || h === '#tracking-page') {
-        setCurrentRoute('tracking');
-      } else {
-        setCurrentRoute('home');
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('hashchange', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('hashchange', handlePopState);
-    };
-  }, []);
+    if (!telemetryLive) return;
+    const id = setInterval(() => {
+      setTelemetryTick((t) => (t + 1) % 6);
+    }, 2400);
+    return () => clearInterval(id);
+  }, [telemetryLive]);
 
-  // Eina tècnica interactiva seleccionada al Hero / Eines
-  const [activeToolTab, setActiveToolTab] = useState<'simulador' | 'incoterms' | 'cubatge'>('simulador');
+  const currentHeroTruck = HERO_TELEMETRY_TRUCKS[heroTruckIdx];
+  const tempJitter = [0, 0.1, -0.1, 0.0, 0.1, -0.1][telemetryTick];
+  const liveHeroTemp = (currentHeroTruck.temp + tempJitter).toFixed(1);
 
-  // Estat del simulador de rutes
-  const [rutaSimulada, setRutaSimulada] = useState({
-    origen: 'Port de Barcelona',
-    desti: 'Xangai (Port de Yangshan)',
-    mode: 'maritim-fcl',
-  });
+  // 2. Red Interactivo España por Carretera (Mapa de Autovías Sanitarias)
+  const [selectedHubCode, setSelectedHubCode] = useState<string>('MAD');
+  const activeSpainHub = SPAIN_HUBS.find((h) => h.codigo === selectedHubCode) || SPAIN_HUBS[0];
 
-  // Estat de la calculadora de cubatge
-  const [calcPalets, setCalcPalets] = useState(24);
-  const [calcTipus, setCalcTipus] = useState<'euro' | 'iso'>('euro');
-  const [calcAlcada, setCalcAlcada] = useState(1.6); // en metres
+  // 3. Espectro de Cadena de Frío interactivo
+  const [activeRangeId, setActiveRangeId] = useState<ColdRangeSpec['id']>('refrigerado');
+  const activeColdSpec = COLD_RANGES.find((r) => r.id === activeRangeId) || COLD_RANGES[0];
 
-  // Estat de la Base de Dades SheetDB (Seguiment d'Enviaments / Tracking)
-  const [trackingQuery, setTrackingQuery] = useState('');
-  const [dbTrackingList, setDbTrackingList] = useState<TrackingItem[]>([]);
-  const [selectedTracking, setSelectedTracking] = useState<TrackingItem | null>(null);
-  const [dbStatus, setDbStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>('idle');
-  const [lastCreatedCode, setLastCreatedCode] = useState<string>('');
+  // 4. Filtro Flota de Camiones
+  const [fleetFilter, setFleetFilter] = useState<'todos' | 'pesado' | 'clinico'>('todos');
+  const filteredFleet =
+    fleetFilter === 'todos' ? FLEET_ITEMS : FLEET_ITEMS.filter((f) => f.categoria === fleetFilter);
 
-  // Expedicions inicials de referència per al mòdul de seguiment
-  const expedicionsExemple: TrackingItem[] = [
-    {
-      tracking_code: 'ATL-MAR-7410',
-      client: 'TransMediterrani Fruits S.L.',
-      origin: 'Port de Barcelona (Terminal BEST)',
-      destination: 'Port de Rotterdam (Hub Maasvlakte)',
-      status: 'En trànsit marítim internacional',
-      location: 'Mar Balear (41.2°N, 2.5°E) · Rumb 245°',
-      eta: '16/11/2026',
-      service: "Fletament FCL Contenidor 40' High Cube",
-      incoterm: 'CIF',
-      date: '10/11/2026',
-      stage: 3,
-    },
-    {
-      tracking_code: 'ATL-REEF-8840',
-      client: 'BioPharma Ibèrica S.A.',
-      origin: 'ZAL Barcelona Prat (Hub WMS)',
-      destination: 'Hamburg Distribution Hub Pharma',
-      status: 'En ruta frigorífica FTL (Consigna +4,0 ºC)',
-      location: 'Autopista A-7 (Lió, França)',
-      eta: '14/11/2026',
-      service: 'Transport Terrestre Frigorífic ATP FRC',
-      incoterm: 'DAP',
-      date: '11/11/2026',
-      stage: 3,
-    },
-    {
-      tracking_code: 'ATL-WMS-3210',
-      client: 'Industria Agroquímica Vallès',
-      origin: 'Port de Barcelona (Terminal Moll Sud)',
-      destination: 'Dipòsit Duaner Públic DA (Nau 14-B)',
-      status: 'Mercaderia recepcionada en Dipòsit Duaner',
-      location: 'ZAL Prat - Molls 12-16',
-      eta: '12/11/2026 (Completat)',
-      service: 'Magatzem Regulador WMS & Cross-Docking',
-      incoterm: 'DAP',
-      date: '12/11/2026',
-      stage: 4,
+  // 5. Rastreador Terrestre en Tiempo Real (Live Road Cold Chain Tracker)
+  const [trackingInput, setTrackingInput] = useState('MDC-2026-0841');
+  const [activeShipment, setActiveShipment] = useState<RoadShipment | null>(SHIPMENT_DATABASE['MDC-2026-0841']);
+  const [trackerError, setTrackerError] = useState<string | null>(null);
+  const [trackerLoading, setTrackerLoading] = useState(false);
+
+  const handleTrackShipment = async (codeOverride?: string) => {
+    const query = (codeOverride ?? trackingInput).trim().toUpperCase();
+    if (codeOverride) setTrackingInput(codeOverride);
+
+    if (!query) {
+      setTrackerError('Introduce un código de expedición válido (ej: MDC-2026-0841) para consultar la telemetría del camión.');
+      setActiveShipment(null);
+      return;
     }
-  ];
 
-  // Connexió en directe a SheetDB per carregar registres
-  const fetchSheetDb = async () => {
-    setDbStatus('loading');
+    setTrackerLoading(true);
+    setTrackerError(null);
+
+    const found = SHIPMENT_DATABASE[query];
+    if (found) {
+      setActiveShipment(found);
+      setTrackerLoading(false);
+      return;
+    }
+
+    // Fallback a base de datos externa SheetDB
     try {
-      const res = await fetch(SHEETDB_API_URL);
-      if (res.ok) {
-        const rawData = await res.json();
-        // Filtrar i mapar registres de SheetDB si en té de vàlids
-        if (Array.isArray(rawData)) {
-          const parsed: TrackingItem[] = [];
-          rawData.forEach((item: any, idx: number) => {
-            const rawCode = (item['tracking_code '] || item.tracking_code || '').trim();
-            // Ignorar files que siguin només noms de columnes
-            if (rawCode && !['client', 'origin', 'destination', 'status', 'location', 'eta'].includes(rawCode.toLowerCase())) {
-              parsed.push({
-                tracking_code: rawCode,
-                client: (item.client || item['client '] || 'Client Registrat a SheetDB').trim(),
-                origin: (item['origin '] || item.origin || 'Port de Barcelona').trim(),
-                destination: (item['destination '] || item.destination || 'Rotterdam / Destinació').trim(),
-                status: (item.status || item['status '] || 'Registrat a SheetDB').trim(),
-                location: (item['location '] || item.location || 'Terminal Portuària Barcelona').trim(),
-                eta: (item['eta '] || item.eta || 'En programació').trim(),
-                service: item.service || item.servei || "Servei Multimodal",
-                incoterm: item.incoterm || 'CIF',
-                date: item.date || item.data || '12/11/2026',
-                stage: (item.status || '').toLowerCase().includes('lliurat') ? 4 : (item.status || '').toLowerCase().includes('trànsit') ? 3 : 2,
-              });
-            }
-          });
+      const res = await fetch(`${SHEETDB_ENDPOINT}?_nc=${Date.now()}`, { cache: 'no-store' });
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const firstRow = rows[0] || {};
+        const colKey = Object.keys(firstRow).find((k) => k.trim().toUpperCase() === query);
+        let sheetRecord: Partial<RoadShipment> | null = null;
 
-          // Combinar amb els exemples per garantir una experiència completa
-          const combinats = [...parsed, ...expedicionsExemple];
-          // Eliminar duplicats per tracking_code
-          const unics = Array.from(new Map(combinats.map(item => [item.tracking_code, item])).values());
-          setDbTrackingList(unics);
-          setSelectedTracking(unics[0] || null);
+        if (colKey) {
+          const v: Record<string, string> = {};
+          for (const r of rows) {
+            const label = String(r['tracking_code '] || r.tracking_code || Object.values(r)[0] || '').toLowerCase();
+            const val = String(r[colKey] || '').trim();
+            if (label.includes('origin') || label.includes('origen')) v.origen = val;
+            if (label.includes('destin')) v.destino = val;
+            if (label.includes('status') || label.includes('estat')) v.estado = val;
+            if (label.includes('eta')) v.eta = val;
+          }
+          sheetRecord = {
+            codigo: colKey.trim(),
+            origen: v.origen || 'Barcelona (ZAL Pharma)',
+            destino: v.destino || 'Madrid (Hub Central)',
+            eta: v.eta || '18/11/2026 · 14:30 CET',
+            estado: v.estado?.toLowerCase().includes('lliur') ? 'Entregado' : 'En ruta',
+            progreso: v.estado?.toLowerCase().includes('lliur') ? 100 : 60,
+            sensores: {
+              tempActual: '+4.4 °C',
+              vibracionG: '0.03 G',
+              aperturaPuerta: 'Precintado · 0 aperturas',
+              combustibleReserva: '84 % (Autonomía 780 km)',
+              humedad: '40.0 % HR',
+            },
+          };
         } else {
-          setDbTrackingList(expedicionsExemple);
-          setSelectedTracking(expedicionsExemple[0]);
+          const rowMatch = rows.find(
+            (r) => String(r.tracking_code || r['tracking_code '] || '').trim().toUpperCase() === query
+          );
+          if (rowMatch) {
+            sheetRecord = {
+              codigo: query,
+              origen: String(rowMatch.origin || rowMatch['origin '] || 'Barcelona (ZAL Pharma)').trim(),
+              destino: String(rowMatch.destination || rowMatch['destination '] || 'Madrid (Hub Central)').trim(),
+              eta: String(rowMatch.eta || rowMatch['eta '] || '18/11/2026').trim(),
+              estado: 'En ruta',
+              progreso: 60,
+              sensores: {
+                tempActual: '+4.5 °C',
+                vibracionG: '0.03 G',
+                aperturaPuerta: 'Precintado · 0 aperturas',
+                combustibleReserva: '88 % (Autonomía 820 km)',
+                humedad: '39.8 % HR',
+              },
+            };
+          }
         }
-        setDbStatus('connected');
-      } else {
-        setDbStatus('connected');
-        setDbTrackingList(expedicionsExemple);
-        setSelectedTracking(expedicionsExemple[0]);
+
+        if (sheetRecord) {
+          setActiveShipment({
+            codigo: sheetRecord.codigo || query,
+            unidad: 'Unidad MEDICAM · Tráiler FRC Validado',
+            vehiculo: 'Semirremolque Frigorífico ATP Clase FRC',
+            origen: sheetRecord.origen || 'Base Barcelona ZAL',
+            destino: sheetRecord.destino || 'Hospital Destino España',
+            producto: 'Carga Biofarmacéutica Validada',
+            loteClinico: 'Lote Verificado SheetDB · EU GDP',
+            rangoObjetivo: '+2 °C a +8 °C (Refrigerado Clínico)',
+            targetMin: 2,
+            targetMax: 8,
+            equipoFrio: 'Carrier Bi-Zona + Sondas EN 12830',
+            estado: (sheetRecord.estado as RoadShipment['estado']) || 'En ruta',
+            progreso: sheetRecord.progreso || 60,
+            eta: sheetRecord.eta || 'En tránsito por carretera',
+            sensores: sheetRecord.sensores!,
+            hitos: SHIPMENT_DATABASE['MDC-2026-0841'].hitos,
+            curvaTermica: SHIPMENT_DATABASE['MDC-2026-0912'].curvaTermica,
+          });
+          setTrackerLoading(false);
+          return;
+        }
       }
-    } catch (err) {
-      console.log('SheetDB fetch error:', err);
-      setDbStatus('connected');
-      setDbTrackingList(expedicionsExemple);
-      setSelectedTracking(expedicionsExemple[0]);
+    } catch {
+      // Continuar con error si no existe en SheetDB ni en ejemplos
     }
+
+    setTrackerError(`Expedición "${query}" no encontrada en la red de camiones de MEDICAM España.`);
+    setActiveShipment(null);
+    setTrackerLoading(false);
   };
 
-  useEffect(() => {
-    fetchSheetDb();
-  }, []);
+  // 6. Calculadora de Cotización en Camión Frigorífico (100 % España)
+  const [quoteOrigin, setQuoteOrigin] = useState('BCN · Barcelona (ZAL Pharma)');
+  const [quoteDest, setQuoteDest] = useState('MAD · Madrid (Hub Central)');
+  const [quoteWeight, setQuoteWeight] = useState(650);
+  const [quotePallets, setQuotePallets] = useState(4);
+  const [quoteTemp, setQuoteTemp] = useState<ColdRangeSpec['id']>('refrigerado');
+  const [quoteUrgency, setQuoteUrgency] = useState<'consolidado' | 'directo' | 'furgon_urgente'>('directo');
+  const [quoteEmail, setQuoteEmail] = useState('');
+  const [quoteCompany, setQuoteCompany] = useState('');
+  const [quoteSubmitting, setQuoteSubmitting] = useState(false);
+  const [quoteConfirmedCode, setQuoteConfirmedCode] = useState<string | null>(null);
 
-  // Estat del formulari de contacte
-  const [formData, setFormData] = useState({
-    nom: '',
-    empresa: '',
-    correu: '',
-    telefon: '',
-    servei: 'ATL-FCL-40HC-INT',
-    origen: '',
-    desti: '',
-    volum: '',
-    observacions: '',
-    incoterm: 'CIF',
-  });
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
-  const [lastMailtoUrl, setLastMailtoUrl] = useState('');
+  // Cálculo dinámico realista de flete por carretera en España
+  const effectiveWeight = Math.max(quoteWeight, quotePallets * 280);
+  const routeDistanceFactor =
+    quoteDest.includes('SCQ') || quoteDest.includes('SVQ')
+      ? 1.28
+      : quoteDest.includes('PMI')
+        ? 1.38
+        : quoteDest.includes('MAD') || quoteDest.includes('BIO')
+          ? 1.12
+          : 0.92;
 
-  // Els 3 Productes Logístics Concrets de la Rúbrica
-  const productes: ProductModalData[] = [
-    {
-      id: 'maritim-fcl',
-      nomTecnic: "Fletament i Càrrega Marítima FCL Contenidor 40' High Cube (HC)",
-      refInterna: 'REF: ATL-FCL-40HC-INT',
-      codiTecnic: 'CT-MAR-7410 (Codi TARIC: 8609.00.00)',
-      normativa: 'ISO 668:2020 / ISO 1496-1 / OEA-F (Customs Security)',
-      categoria: 'maritim',
-      descripcioCompleta:
-        "Servei integral de transport marítim internacional sota règim de càrrega completa (FCL - Full Container Load) mitjançant contenidor d'alçada superior 40' High Cube. Operativa de reserva de fletament marítim (booking) en línies regulars transoceàniques directes, gestió de recollida de buit, posició a fàbrica/magatzem carregador, trasllat ferroviari/carretera a terminal portuària (Port de Barcelona / Port de València), pesatge oficial VGM i emissió de Coneixement d'Embarcament B/L negociable o Sea Waybill. Inclou declaració de despatx duaner DUA d'exportació/importació canalitzat pel nostre departament d'Operador Econòmic Autoritzat.",
-      imatge: '/images/maritim-fcl.jpg',
-      fallbackImatge: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&q=80',
-      especificacions: {
-        dimensions: 'Interiors: 12.032 mm (L) × 2.352 mm (A) × 2.698 mm (Alt). Pas de porta: 2.340 × 2.585 mm.',
-        volum: '76,40 m³ (CBM) / 2.700 peus cúbics útils (+12% respecte 40ft estàndard).',
-        tara: '3.900 kg (estructura d\'acer Corten anticorrosiu).',
-        payload: '28.600 kg càrrega útil màxima neta (Massa Màxima Bruta MGW: 32.500 kg).',
-        capacitatPalets: '25 Europalets normalitzats (1.200 × 800 mm) o 21 Palets ISO/americans (1.200 × 1.000 mm).',
-        incoterms: 'FOB (Free On Board), CIF (Cost, Insurance & Freight), CFR, DAP (Delivered at Place) i DDP.',
-        documentacio: 'Bill of Lading marítim (B/L) telemàtic, DUA d\'exportació/importació amb certificat OEA, codi EORI, certificat de pesatge VGM (mètode 1 per bàscula calibrada) i precinte d\'alta seguretat ISO/PAS 17712.',
-        certificats: 'OEA-F (Simplificacions Duaneres i Seguretat), Certificat de Fumigació fito-sanitari NIMF-15 per a fustes d\'estiba.',
-      },
-      avantatges: [
-        'Capacitat volumètrica ampliada (+12% de cubatge respecte al contenidor 40ft estàndard).',
-        'Connexió directa diària per llançadora ferroviària i carretera amb el Port de Barcelona.',
-        'Despatx de duanes centralitzat amb assignació immediata de circuit verd en trànsit duaner.',
-        'Traçabilitat satel·litària AIS del vaixell i actualització d\'ETA en temps real.'
-      ]
-    },
-    {
-      id: 'terrestre-frigo',
-      nomTecnic: 'Transport Terrestre Internacional Frigorífic FTL - Semiremolc Termo-Aïllat ATP FRC',
-      refInterna: 'REF: ATL-REEF-EU33-ATP',
-      codiTecnic: 'CT-TER-8840 (Homologació ATP Classe FRC)',
-      normativa: 'Conveni CMR / Acord ATP / Regulació Farmacèutica GDP / Euro 6e',
-      categoria: 'terrestre',
-      descripcioCompleta:
-        "Línia de transport de càrrega completa per carretera (FTL - Full Truck Load) sota temperatura dirigida estricta per a productes alimentaris peribles (fresc, carni, làctic, hortofrutícola) i especialitats farmacèutiques d'alta sensibilitat. Flota pròpia de tractores homologades Euro 6e d'emissions mínimes, tripulades per doble conductor per garantir trànsits express europeus ininterromputs. Equip frigorífic d'última generació Thermo King SLXi 400 bi-temperatura amb motor elèctric standby i telemetria satel·litària bidireccional.",
-      imatge: '/images/terrestre-frigo.jpg',
-      fallbackImatge: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1200&q=80',
-      especificacions: {
-        dimensions: 'Longitud interior útil: 13.410 mm × Amplada: 2.460 mm × Alçada lliure: 2.650 mm.',
-        volum: '87,50 m³ útils.',
-        tara: 'Conjunt tractora + semiremolc: 14.800 kg aproximats.',
-        payload: 'Càrrega útil transportable de 22.200 a 24.000 kg (Massa Màxima Autoritzada MMA: 40.000 kg).',
-        capacitatPalets: '33 Europalets de base (1.200 × 800 mm) o 66 palets mitjançant sistema de doble pis (Double-Deck) regulable.',
-        temperatura: 'Rang controlat continu de -25,0 ºC a +25,0 ºC amb registre telemàtic i precisió ±0,3 ºC.',
-        documentacio: 'Carta de port internacional e-CMR, certificat ATP vigent de carrosseria frigorífica, informe d\'homologació del termògraf EN 12830, carnet TIR (trànsit extracomunitari) i full de registre de desinfecció APPCC.',
-        certificats: 'ATP Classe FRC (Frigorífic Reforçat Classe C, coeficient K ≤ 0,40 W/m²·K), Certificació GDP Pharma i ISO 9001:2015.',
-      },
-      avantatges: [
-        'Termògraf digital connectat 24/7 amb impressió de tira tèrmica a la recepció i descàrrega.',
-        'Sistemes d\'alarma automàtica per desviació de consigna superior a 1,5 ºC enviades directament al centre de control.',
-        'Doble tripulació amb garantia de compliment de temps de conducció i descans (Reglament CE 561/2006).',
-        'Assegurança de mercaderies sota Conveni CMR amb clàusula especial d\'avaria de fred i danys peribles.'
-      ]
-    },
-    {
-      id: 'magatzem-wms',
-      nomTecnic: "Centre Regulador Automatitzat, Gestió WMS i Cross-Docking d'Alta Rotació",
-      refInterna: 'REF: ATL-WMS-HUB45-LOG',
-      codiTecnic: 'CT-LOG-3210 (Classificació WMS Nivell 4.0)',
-      normativa: 'ISO 9001:2015 / IFS Logistics / OEA-D (Dipòsit Duaner Públic DA/DDA)',
-      categoria: 'magatzem',
-      descripcioCompleta:
-        "Hub logístic multimodal de 45.000 m² a la Zona d'Activitats Logístiques (ZAL) de Barcelona amb accés immediat als molls portuaris i a les autopistes AP-7 i A-2. Plataforma especialitzada en operacions de consolidació, desconsolidació de contenidors, gestió d'estocs via WMS per radiofreqüència RFID, cross-docking d'alta freqüència i preparació de comandes multi-referència (picking unitari i per caixes amb codificació GS1-128 / SSCC). Habilitat com a Dipòsit Duaner Públic per a suspensió indefinida d'aranzels i liquidació diferida d'impostos.",
-      imatge: '/images/magatzem-wms.jpg',
-      fallbackImatge: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
-      especificacions: {
-        dimensions: 'Plataforma de 45.000 m² de nau coberta, alçada lliure sota biga de 12,50 m.',
-        volum: '38.500 buits d\'emmagatzematge paletitzat en estanteries industrials dinàmiques i convencionals.',
-        tara: 'Resistència estructural de solera de formigó d\'alta densitat: 8,0 t/m².',
-        payload: 'Capacitat de manipulació de càrregues de fins a 3.500 kg per buit de palet individual.',
-        capacitatPalets: '42 molls de càrrega electrohidràulics amb abric hermètic isotèrmic i guies de centratge.',
-        incoterms: 'Gestió en dipòsit per a mercaderies sota qualsevol Incoterm® 2020 (EXW, FCA, CPT, DAP).',
-        documentacio: 'Albarans de recepció electrònica EDI (ORDERS / DESADV / INVRPT), albarà d\'expedició amb matrícula SSCC (Serial Shipping Container Code), i llibre de registre telemàtic duaner d\'entrades i sortides.',
-        certificats: 'Autorització Dipòsit Duaner Públic (DA) i Dipòsit Franc, Certificat IFS Logistics per a alimentació no refrigerada i ISO 9001:2015.',
-      },
-      avantatges: [
-        'Operativa de Cross-Docking ràpid amb temps d\'estada inferior a 4 hores entre recepció i reexpedició.',
-        'Estratègies d\'estoc configurables: FIFO (First In First Out), FEFO (per caducitats) o LIFO segons client.',
-        'Integració directa mitjançant API REST i formats EDI estandarditzats amb SAP, Oracle i Navision.',
-        'Seguretat perimetral per CCTV, control d\'accés biomètric i sistemes d\'extinció ESFR d\'alta cobertura.'
-      ]
-    }
-  ];
-
-  const filteredProducts =
-    activeCategory === 'tots'
-      ? productes
-      : productes.filter((p) => p.categoria === activeCategory);
-
-  // Estimador de rutes
-  const calcularEstimacio = () => {
-    if (rutaSimulada.mode === 'maritim-fcl') {
-      if (rutaSimulada.desti.includes('Xangai')) {
-        return { temps: '26-28 dies', dist: '9.850 milles nàutiques', incoterm: 'CIF / CFR', reduccio: '-65% CO₂ eq/t' };
-      }
-      if (rutaSimulada.desti.includes('Nova York')) {
-        return { temps: '11-13 dies', dist: '3.800 milles nàutiques', incoterm: 'FOB / CIF', reduccio: '-58% CO₂ eq/t' };
-      }
-      return { temps: '16-18 dies', dist: '5.200 milles nàutiques', incoterm: 'CIF / DAP', reduccio: '-60% CO₂ eq/t' };
-    } else {
-      if (rutaSimulada.desti.includes('Rotterdam')) {
-        return { temps: '28-32 hores', dist: '1.480 km per carretera', incoterm: 'DAP / DDP', reduccio: '-38% Euro 6e' };
-      }
-      return { temps: '34-38 hores', dist: '1.920 km express', incoterm: 'DAP / CPT', reduccio: '-35% Euro 6e' };
-    }
+  const tempMultiplier: Record<ColdRangeSpec['id'], number> = {
+    criogenico: 1.9,
+    ultracongelado: 1.55,
+    congelado: 1.25,
+    refrigerado: 1.12,
+    ambiente: 1.0,
   };
 
-  const estimacioActual = calcularEstimacio();
-
-  // Càlcul de cubatge estimat
-  const volumUnitariPalet = calcTipus === 'euro' ? (1.2 * 0.8 * calcAlcada) : (1.2 * 1.0 * calcAlcada);
-  const volumTotalEstimats = (calcPalets * volumUnitariPalet).toFixed(1);
-  const equipRecomanat = Number(volumTotalEstimats) <= 33 ? "Semiremolc Frigorífic FTL (fins a 33 palets)" : "Contenidor 40' High Cube (fins a 76,4 m³)";
-
-  const handlePreselectService = (ref: string) => {
-    setFormData((prev) => ({ ...prev, servei: ref }));
-    const element = document.getElementById('contacte');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+  const urgencyRates = {
+    consolidado: { mult: 0.42, transitBaseHours: 14, label: 'Grupaje Refrigerado GDP (24h)' },
+    directo: { mult: 0.78, transitBaseHours: 7, label: 'Camión Directo Dedicado (Mismo Día)' },
+    furgon_urgente: { mult: 1.45, transitBaseHours: 5, label: 'Furgón Clínico Express (Puerta a Farmacia)' },
   };
 
-  const handleApplySimulatedRoute = () => {
-    setFormData((prev) => ({
-      ...prev,
-      origen: rutaSimulada.origen,
-      desti: rutaSimulada.desti,
-      servei: rutaSimulada.mode === 'maritim-fcl' ? 'ATL-FCL-40HC-INT' : 'ATL-REEF-EU33-ATP',
-      incoterm: estimacioActual.incoterm.split(' / ')[0],
-    }));
-    const element = document.getElementById('contacte');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const selectedUrgency = urgencyRates[quoteUrgency];
+  const estimatedCost =
+    quoteUrgency === 'furgon_urgente'
+      ? Math.round(790 * routeDistanceFactor + effectiveWeight * 0.48 * tempMultiplier[quoteTemp])
+      : Math.round(165 + effectiveWeight * selectedUrgency.mult * tempMultiplier[quoteTemp] * routeDistanceFactor);
 
-  // Tramitació del formulari connectat oficialment a SheetDB (Base de Dades Real) i a Formspree
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const estimatedHours = Math.round(selectedUrgency.transitBaseHours * routeDistanceFactor);
+
+  const handleQuoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormLoading(true);
-
-    const serveiNom =
-      productes.find((p) => p.refInterna === formData.servei || formData.servei.includes(p.id))?.nomTecnic ||
-      formData.servei;
-
-    const nouCodiTracking = 'ATL-' + Math.floor(100000 + Math.random() * 900000);
-    setLastCreatedCode(nouCodiTracking);
-
-    const emailSubject = `Sol·licitud de Pressupost [#${nouCodiTracking}] [${formData.empresa || formData.nom}] - Adam Transport`;
-    const emailBody = encodeURIComponent(
-      `SOL·LICITUD DE COTITZACIÓ LOGÍSTICA DIRECTA\n` +
-      `==================================================\n` +
-      `Codi de Registre: #${nouCodiTracking}\n` +
-      `Producte / Servei: ${serveiNom}\n` +
-      `Codi / Referència: ${formData.servei}\n` +
-      `Incoterm sol·licitat: ${formData.incoterm}\n\n` +
-      `DADES DE L'EMPRESA I CONTACTE:\n` +
-      `--------------------------------------------------\n` +
-      `Nom i Cognoms: ${formData.nom}\n` +
-      `Empresa: ${formData.empresa}\n` +
-      `Correu del Client: ${formData.correu}\n` +
-      `Telèfon: ${formData.telefon}\n\n` +
-      `DADES DE L'EXPEDICIÓ:\n` +
-      `--------------------------------------------------\n` +
-      `Origen: ${formData.origen || 'Port de Barcelona'}\n` +
-      `Destinació: ${formData.desti || 'Destinació Internacional'}\n` +
-      `Requeriments tècnics: ${formData.observacions}\n\n` +
-      `==================================================\n` +
-      `Desat a la Base de Dades SheetDB (fst1vl3p3sehx)\n` +
-      `Enviat automàticament a adam043@vidalibarraquer.net mitjançant Formspree`
-    );
-
-    const mailtoUrl = `mailto:adam043@vidalibarraquer.net?subject=${encodeURIComponent(emailSubject)}&body=${emailBody}`;
-    setLastMailtoUrl(mailtoUrl);
-
-    // 1. Inserció a la Base de Dades Real mitjançant l'API de SheetDB
-    const sheetDbPayload = {
-      data: [
-        {
-          'tracking_code ': nouCodiTracking,
-          tracking_code: nouCodiTracking,
-          client: formData.empresa || formData.nom,
-          'origin ': formData.origen || 'Port de Barcelona',
-          origin: formData.origen || 'Port de Barcelona',
-          'destination ': formData.desti || 'Destinació Internacional',
-          destination: formData.desti || 'Destinació Internacional',
-          status: 'Registrat a SheetDB / En valoració',
-          'location ': 'Port de Barcelona (Terminal Moll Sud)',
-          location: 'Port de Barcelona (Terminal Moll Sud)',
-          'eta ': '16/11/2026',
-          eta: '16/11/2026',
-          correu: formData.correu,
-          telefon: formData.telefon,
-          servei: serveiNom,
-          incoterm: formData.incoterm,
-          observacions: formData.observacions,
-          data: new Date().toLocaleDateString('ca-ES'),
-        }
-      ]
-    };
+    setQuoteSubmitting(true);
+    const newCode = `MDC-2026-${Math.floor(1000 + Math.random() * 8999)}`;
 
     try {
-      // Inserció a SheetDB
-      await fetch(SHEETDB_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(sheetDbPayload),
-      });
-
-      // Actualitzar l'estat local de tracking amb la nova entrada
-      const nouItem: TrackingItem = {
-        tracking_code: nouCodiTracking,
-        client: formData.empresa || formData.nom,
-        origin: formData.origen || 'Port de Barcelona',
-        destination: formData.desti || 'Destinació Internacional',
-        status: 'Registrat a SheetDB / Pendent de cotització',
-        location: 'Port de Barcelona (Terminal Moll Sud)',
-        eta: '16/11/2026',
-        service: serveiNom,
-        incoterm: formData.incoterm,
-        date: new Date().toLocaleDateString('ca-ES'),
-        stage: 1,
-      };
-
-      setDbTrackingList((prev) => [nouItem, ...prev]);
-      setSelectedTracking(nouItem);
-
-      // 2. Notificació per correu a través de Formspree a adam043@vidalibarraquer.net
-      await fetch('https://formspree.io/f/xvkkyjgo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          tracking_code: nouCodiTracking,
-          nom: formData.nom,
-          empresa: formData.empresa,
-          email: formData.correu,
-          telefon: formData.telefon,
-          servei: serveiNom,
-          codiRef: formData.servei,
-          incoterm: formData.incoterm,
-          origen: formData.origen || 'Port de Barcelona',
-          destinacio: formData.desti || 'Destinació Internacional',
-          requeriments: formData.observacions,
-          _subject: emailSubject,
+      await Promise.allSettled([
+        fetch(FORMSPREE_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            codigo_expedicion: newCode,
+            empresa: quoteCompany || 'Laboratorio / Hospital España',
+            email_cliente: quoteEmail || 'No indicado',
+            origen: quoteOrigin,
+            destino: quoteDest,
+            peso_kg: quoteWeight,
+            europales: quotePallets,
+            peso_tasable_km: effectiveWeight,
+            rango_termico: quoteTemp,
+            modalidad_camion: selectedUrgency.label,
+            estimacion_eur: `${estimatedCost} €`,
+            tiempo_ruta_h: `${estimatedHours} h`,
+            buzon_comercial: 'comercial@medicam.cat',
+            destinatario_academico: 'adam043@vidalibarraquer.net',
+            _subject: `Cotització MEDICAM [${newCode}] - ${quoteOrigin} -> ${quoteDest}`,
+          }),
         }),
-      });
-    } catch (err) {
-      console.log('Error de connexió (handled):', err);
+        fetch(SHEETDB_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            data: [
+              {
+                'tracking_code ': newCode,
+                tracking_code: newCode,
+                client: quoteCompany || 'Cliente MEDICAM España',
+                'origin ': quoteOrigin,
+                origin: quoteOrigin,
+                'destination ': quoteDest,
+                destination: quoteDest,
+                status: 'En cámara GDP',
+                'location ': 'Muelle Climatizado ZAL Barcelona / Madrid',
+                location: 'Muelle Climatizado ZAL Barcelona / Madrid',
+                'eta ': `${estimatedHours}h tránsito carretera`,
+                eta: `${estimatedHours}h tránsito carretera`,
+              },
+            ],
+          }),
+        }),
+      ]);
     } finally {
-      setFormLoading(false);
-      setFormSubmitted(true);
+      setQuoteConfirmedCode(newCode);
+      setQuoteSubmitting(false);
     }
   };
 
-  // Filtrar tracking per cerca
-  const trackingFiltrats = dbTrackingList.filter(
-    (item) =>
-      item.tracking_code.toLowerCase().includes(trackingQuery.toLowerCase()) ||
-      item.client.toLowerCase().includes(trackingQuery.toLowerCase()) ||
-      item.destination.toLowerCase().includes(trackingQuery.toLowerCase())
-  );
+  // 7. Modal Legal
+  const [legalModal, setLegalModal] = useState<'gdp' | 'atp' | 'privacidad' | null>(null);
 
-  if (currentRoute === 'tracking') {
-    return <TrackingPage />;
-  }
+  const t = UI_COPY[lang];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col selection:bg-fuchsia-600 selection:text-white">
-      {/* ======================================================== */}
-      {/* 1. NAVBAR SUPERIOR (PALETA MORAT PROFUND & FÚCSIA)        */}
-      {/* ======================================================== */}
-      <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-purple-900/60 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-8">
-            {/* Zone 1: Brand wordmark & Logo */}
-            <a href="#inici" className="flex items-center gap-3.5 group shrink-0">
-              <BrandLogo />
-              <div className="flex flex-col">
-                <span className="text-lg font-black tracking-tight text-white uppercase leading-none group-hover:text-pink-400 transition-colors">
-                  Adam Transport
-                </span>
-                <span className="text-xs font-bold tracking-widest text-fuchsia-400 uppercase mt-0.5">
-                  & Logistic
-                </span>
-              </div>
+    <div className="min-h-screen bg-[#F4F7F2] text-[#14360E] flex flex-col selection:bg-[#F5E626] selection:text-[#14360E]">
+      {/* ===================================================================== */}
+      {/* BARRA OPERATIVA SUPERIOR INSTITUCIONAL (VERDE BOSQUE + AMARILLO)       */}
+      {/* ===================================================================== */}
+      <div className="bg-[#173E0D] text-white border-b border-[#2E741B] text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="inline-flex items-center gap-1.5 text-[#F5E626] font-semibold">
+              <HeartPulse className="w-3.5 h-3.5 text-[#F5E626]" />
+              {t.deskStatus}
+            </span>
+            <span aria-hidden="true" className="text-white/30 hidden sm:inline">|</span>
+            <a
+              href="mailto:operacions@medicam.cat"
+              className="inline-flex items-center gap-1.5 text-white/90 hover:text-[#F5E626] transition-colors font-mono"
+            >
+              <Mail className="w-3.5 h-3.5 text-[#A3E635]" />
+              <span>operacions@medicam.cat</span>
             </a>
+            <span aria-hidden="true" className="text-white/30 hidden md:inline">|</span>
+            <a
+              href="tel:+34932458800"
+              className="hidden md:inline-flex items-center gap-1.5 text-white/90 hover:text-[#F5E626] transition-colors font-mono"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#A3E635]" />
+              <span className="font-sans text-white/80">{t.operacionesLabel}</span>
+              <strong className="text-white">+34 932 45 88 00</strong>
+            </a>
+          </div>
 
-            {/* Zone 2: Navigation links */}
-            <nav className="hidden md:flex items-center space-x-7 text-sm font-semibold text-slate-300">
-              <a href="#inici" className="hover:text-pink-400 transition-colors whitespace-nowrap">
-                Inici
-              </a>
-              <a href="#serveis" className="hover:text-pink-400 transition-colors whitespace-nowrap">
-                Serveis / Catàleg
-              </a>
-              <a
-                href="/tracking"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.pushState({}, '', '/tracking');
-                  setCurrentRoute('tracking');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="hover:text-pink-400 transition-colors whitespace-nowrap flex items-center gap-1.5 text-pink-300"
-              >
-                <Database className="w-4 h-4 text-pink-400" />
-                Seguiment (/tracking)
-              </a>
-              <a href="#eines" className="hover:text-pink-400 transition-colors whitespace-nowrap">
-                Simulador & Incoterms
-              </a>
-              <a href="#quisom" className="hover:text-pink-400 transition-colors whitespace-nowrap">
-                Qui Som
-              </a>
-              <a href="#blog" className="hover:text-pink-400 transition-colors whitespace-nowrap">
-                Blog
-              </a>
-              <a href="#contacte" className="hover:text-pink-400 transition-colors whitespace-nowrap">
-                Contacte
-              </a>
-            </nav>
-
-            {/* Zone 3: Primary action button */}
-            <div className="hidden md:flex items-center gap-3 shrink-0">
-              <a
-                href="#contacte"
-                className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-600 hover:from-purple-600 hover:to-pink-500 text-white font-semibold text-sm shadow-md shadow-fuchsia-950/40 transition-all focus:ring-2 focus:ring-pink-400 focus:outline-hidden whitespace-nowrap"
-              >
-                Demanar Pressupost
-              </a>
-            </div>
-
-            {/* Mobile menu trigger */}
-            <div className="md:hidden flex items-center">
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label={mobileMenuOpen ? 'Tancar menú' : 'Obrir menú'}
-                className="p-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-purple-900/60 focus:outline-hidden transition-colors"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="inline-flex items-center gap-1.5 text-[#F5E626] font-semibold">
+              <GraduationCap className="w-4 h-4 text-[#F5E626] shrink-0" />
+              <span>{t.academicNotice}</span>
+            </span>
+            <div className="flex items-center gap-1 bg-[#102C09] border border-[#2E741B] rounded-md p-0.5">
+              <Globe className="w-3.5 h-3.5 text-[#A3E635] ml-1.5 mr-0.5" />
+              {(['ca', 'es', 'en'] as const).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLang(code)}
+                  className={`px-2 py-0.5 text-[11px] font-bold uppercase rounded transition-colors cursor-pointer ${
+                    lang === code ? 'bg-[#F5E626] text-[#14360E]' : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  {code}
+                </button>
+              ))}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation Drawer */}
+      {/* ===================================================================== */}
+      {/* CABECERA BLANCA INSTITUCIONAL CON EMBLEMA COPA DE HIGÍA              */}
+      {/* ===================================================================== */}
+      <header className="sticky top-0 z-40 bg-white border-b-2 border-[#2E741B]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
+          {/* Zona 1: Emblema Copa de Higía + Marca limpia */}
+          <a href="#inicio" className="flex items-center gap-3 whitespace-nowrap shrink-0">
+            <PharmacyChaliceEmblem />
+            <span className="text-xl font-extrabold tracking-tight text-[#14360E]">
+              MEDICAM
+            </span>
+          </a>
+
+          {/* Zona 2: Enlaces concisos */}
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-[#2E5426]">
+            <a href="#servicios" className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
+              {t.navServices}
+            </a>
+            <a href="#corredores" className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
+              {t.navCorridors}
+            </a>
+            <a href="#espectro" className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
+              {t.navSpectrum}
+            </a>
+            <a href="#flota" className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
+              {t.navFleet}
+            </a>
+            <a href="#cotizador" className="hover:text-[#2E741B] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0">
+              {t.navQuote}
+            </a>
+          </nav>
+
+          {/* Zona 3: Botón Clave Verde Farmacia */}
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="#tracker"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white text-sm font-bold transition-colors whitespace-nowrap shrink-0"
+            >
+              <Cross className="w-4 h-4 text-[#F5E626]" />
+              {t.trackCta}
+            </a>
+
+            <button
+              type="button"
+              aria-label="Abrir menú"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-[#14360E] hover:bg-[#F4F7F2] cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Menú Móvil Desplegable */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-purple-900/80 bg-slate-950/98 px-4 pt-3 pb-6 space-y-2.5 animate-fadeIn">
-            <a
-              href="#inici"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
-            >
-              Inici
-            </a>
-            <a
-              href="#serveis"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
-            >
-              Serveis / Catàleg
-            </a>
-            <a
-              href="/tracking"
-              onClick={(e) => {
-                e.preventDefault();
-                setMobileMenuOpen(false);
-                window.history.pushState({}, '', '/tracking');
-                setCurrentRoute('tracking');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="block px-3 py-2 rounded-md font-medium text-pink-300 hover:bg-purple-900/60"
-            >
-              Seguiment d'Enviaments (/tracking)
-            </a>
-            <a
-              href="#eines"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
-            >
-              Simulador & Incoterms
-            </a>
-            <a
-              href="#quisom"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
-            >
-              Qui Som
-            </a>
-            <a
-              href="#blog"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
-            >
-              Blog
-            </a>
-            <a
-              href="#contacte"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md font-medium text-slate-200 hover:bg-purple-900/60 hover:text-pink-400"
-            >
-              Contacte
-            </a>
-            <div className="pt-2">
+          <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-2">
+            {[
+              { href: '#servicios', label: t.navServices },
+              { href: '#corredores', label: t.navCorridors },
+              { href: '#espectro', label: t.navSpectrum },
+              { href: '#flota', label: t.navFleet },
+              { href: '#tracker', label: t.trackCta },
+              { href: '#cotizador', label: t.navQuote },
+            ].map((item) => (
               <a
-                href="#contacte"
+                key={item.href}
+                href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center py-2.5 rounded-lg bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-600 text-white font-semibold text-sm"
+                className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-[#14360E] hover:bg-[#F4F7F2]"
               >
-                Demanar Pressupost
+                {item.label}
               </a>
-            </div>
+            ))}
           </div>
         )}
       </header>
 
       <main className="flex-1">
-        {/* ======================================================== */}
-        {/* 2. PORTADA HERO: SPLIT ASIMÈTRIC AMB SIMULADOR EN VIVU   */}
-        {/* ======================================================== */}
-        <section id="inici" className="relative min-h-[90vh] flex items-center bg-radial-[at_top_right] from-purple-900/50 via-slate-950 to-slate-950 text-white overflow-hidden py-16 lg:py-24">
-          {/* Fons fotogràfic logístic local d'alta resolució */}
-          <img
-            src="/images/hero.jpg"
-            alt="Terminal portuària internacional de contenidors i vaixell portacontenidors"
-            loading="eager"
-            decoding="async"
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.dataset.triedFallback) {
-                target.dataset.triedFallback = 'true';
-                target.src = 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1920&q=80';
-              }
+        {/* ===================================================================== */}
+        {/* SECCIÓN HERO INSPIRADA EN REFERENCIA FARMACÉUTICA VERDE DUOTONO       */}
+        {/* ===================================================================== */}
+        <section id="inicio" className="relative bg-[#2E741B] clinical-grid-bg text-white overflow-hidden">
+          {/* Fotografía de camión en duotono verde farmacia cubriendo todo el fondo */}
+          <div className="absolute inset-0 pharma-duotone-wrap pointer-events-none select-none">
+            <img
+              src="/src/assets/images/hero_pharma_truck_spain_1795018963010.jpg"
+              alt="Camión frigorífico farmacéutico de MEDICAM circulando por autovía española"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-center pharma-duotone-img opacity-85"
+            />
+          </div>
+
+          {/* Degradado verde farmacia con visibilidad de carretera y textura clínica en todo el ancho */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(105deg, rgba(35, 92, 22, 0.90) 0%, rgba(46, 116, 27, 0.80) 46%, rgba(46, 116, 27, 0.65) 72%, rgba(92, 168, 32, 0.45) 100%)',
             }}
-            className="absolute inset-0 w-full h-full object-cover object-center opacity-20 select-none pointer-events-none"
           />
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              
-              {/* Columna Esquerra: Proposició de Valor Comercial */}
-              <div className="lg:col-span-7 space-y-6">
-                <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-fuchsia-400 uppercase">
-                  <span>Solucions Logístiques Globals</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Comerç Internacional</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Port de Barcelona</span>
+          {/* Motivos médicos geométricos, cruz farmacéutica sutil y arcos curvos translúcidos */}
+          <svg
+            viewBox="0 0 1440 720"
+            preserveAspectRatio="none"
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            aria-hidden="true"
+          >
+            {/* Traza médica de red logística de fondo en zona izquierda */}
+            <g opacity="0.14" stroke="#F5E626" fill="none">
+              <circle cx="170" cy="180" r="110" strokeWidth="1.2" strokeDasharray="6 6" />
+              <circle cx="170" cy="180" r="175" strokeWidth="1" />
+              <path d="M150 180H190M170 160V200" strokeWidth="4" strokeLinecap="round" />
+              <path d="M0 540 H240 L275 495 L305 585 L335 520 L360 540 H620" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+            {/* Arcos curvos característicos del cartel farmacéutico */}
+            <path
+              d="M 460 720 C 660 470, 940 270, 1440 110 L 1440 230 C 1020 380, 790 530, 620 720 Z"
+              fill="#A3E635"
+              fillOpacity="0.22"
+            />
+            <path
+              d="M 730 720 C 890 530, 1110 385, 1440 285 L 1440 365 C 1170 465, 975 575, 845 720 Z"
+              fill="#F5E626"
+              fillOpacity="0.16"
+            />
+          </svg>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
+              {/* Columna Izquierda: Titular Blanco Fuerte + Destacado Amarillo + Lista Hospitales */}
+              <div className="lg:col-span-7 flex flex-col justify-center">
+                <div className="text-xs font-mono font-semibold text-white/90 mb-3">
+                  {t.heroEyebrow}
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] max-w-2xl">
-                  Enginyeria en transport multimodal i cadena de fred port-a-porta.
+                <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-[1.08] text-balance">
+                  “{t.heroTitle}”
                 </h1>
 
-                <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
-                  A <strong className="text-white font-semibold">ADAM TRANSPORT AND LOGISTIC</strong> coordinem fletament marítim de contenidors FCL, flotes frigorífiques terrestres certificades ATP Classe FRC i magatzem regulador autoritzat DA a la ZAL de Barcelona.
+                {/* Bloque destacado en Amarillo Lima Farmacéutico como la fecha del cartel */}
+                <p className="mt-5 text-xl sm:text-2xl font-bold text-[#F5E626] tracking-tight">
+                  {t.heroHighlight}
                 </p>
 
-                <div className="pt-2 flex flex-col sm:flex-row gap-4">
-                  <a
-                    href="#contacte"
-                    className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-xl shadow-fuchsia-950/50 transition-all cursor-pointer"
-                  >
-                    Sol·licitar Cotització Directa
-                    <ArrowRight className="ml-2 w-4 h-4 text-white" />
-                  </a>
-
-                  <a
-                    href="#tracking"
-                    className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-slate-900/80 text-pink-300 font-semibold text-sm border border-purple-800/80 hover:bg-purple-900/40 hover:text-white transition-all cursor-pointer gap-2"
-                  >
-                    <Database className="w-4 h-4 text-pink-400" />
-                    Consultar Base de Dades (SheetDB)
-                  </a>
+                {/* Relación de centros hospitalarios y rutas (estilo lista institucional) */}
+                <div className="mt-5 space-y-2 text-sm text-white/95 max-w-2xl">
+                  <div className="font-semibold text-white">Cobertura Directa en Hospitales y Centros Sanitarios:</div>
+                  <p className="leading-relaxed">
+                    <strong className="font-bold text-white">-Hospital Universitari Vall d’Hebron y Clínic (Barcelona)</strong>, enlace diario desde ZAL Pharma por A-2 y AP-7
+                  </p>
+                  <p className="leading-relaxed">
+                    <strong className="font-bold text-white">-Servicio de Farmacia Hospitalaria La Paz y 12 de Octubre (Madrid)</strong>
+                  </p>
+                  <p className="leading-relaxed">
+                    <strong className="font-bold text-white">-Hospital Universitario Virgen Macarena y Virgen del Rocío (Sevilla)</strong>
+                  </p>
                 </div>
 
-                {/* KPI Bar en Hero */}
-                <div className="pt-6 border-t border-purple-900/50 grid grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <span className="block text-slate-400">Règim Duaner</span>
-                    <strong className="text-sm font-bold text-white block mt-0.5">OEA-F Integral</strong>
-                  </div>
-                  <div>
-                    <span className="block text-slate-400">Temperatura Dirigida</span>
-                    <strong className="text-sm font-bold text-pink-400 block mt-0.5">ATP / FRC -25ºC</strong>
-                  </div>
-                  <div>
-                    <span className="block text-slate-400">Capacitat WMS</span>
-                    <strong className="text-sm font-bold text-white block mt-0.5">45.000 m² ZAL</strong>
-                  </div>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <a
+                    href="#cotizador"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#F5E626] hover:bg-[#E5D618] text-[#14360E] font-extrabold text-sm transition-colors whitespace-nowrap shadow-lg"
+                  >
+                    <Syringe className="w-4 h-4" />
+                    {t.heroPrimaryCta}
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="#tracker"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/75 bg-[#173E0D]/70 hover:bg-[#173E0D] text-white font-bold text-sm transition-colors whitespace-nowrap"
+                  >
+                    <Search className="w-4 h-4 text-[#F5E626]" />
+                    {t.heroSecondaryCta}
+                  </a>
                 </div>
               </div>
 
-              {/* Columna Dreta: Targeta Interactiva de Càlcul Tècnic de Ruta */}
-              <div className="lg:col-span-5 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-purple-800/80 p-6 sm:p-7 shadow-2xl shadow-purple-950/60">
-                <div className="flex items-center justify-between pb-4 border-b border-purple-900/80">
-                  <div className="flex items-center gap-2">
-                    <Compass className="w-5 h-5 text-pink-400" />
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                      Simulador de Trànsit Operatiu
-                    </h3>
-                  </div>
-                  <span className="text-[11px] font-mono text-fuchsia-300">
-                    Càlcul en Temps Real
-                  </span>
-                </div>
+              {/* Columna Derecha: Consola Verde Bosque de Telemetría Satelital */}
+              <div className="lg:col-span-5 flex flex-col justify-center">
+                <div className="bg-[#173E0D]/95 border border-[#84CC16]/45 rounded-2xl p-6 shadow-2xl">
+                  <div className="flex items-center justify-between gap-2 pb-4 border-b border-white/15">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-lg bg-[#2E741B] border border-[#A3E635]/40 flex items-center justify-center">
+                        <HeartPulse className="w-5 h-5 text-[#F5E626]" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-[#A3E635] block">Telemetría Satelital en Carretera</span>
+                        <h2 className="text-sm font-bold text-white font-mono">
+                          {currentHeroTruck.unidad}
+                        </h2>
+                      </div>
+                    </div>
 
-                <div className="mt-5 space-y-4 text-xs">
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1">Port / Hub d'Origen:</label>
-                    <select
-                      value={rutaSimulada.origen}
-                      onChange={(e) => setRutaSimulada({ ...rutaSimulada, origen: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-medium focus:ring-2 focus:ring-pink-500 outline-hidden"
+                    <button
+                      type="button"
+                      onClick={() => setTelemetryLive(!telemetryLive)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#2E741B] border border-[#F5E626]/60 text-xs font-mono text-[#F5E626] hover:bg-[#235A14] transition-colors cursor-pointer"
                     >
-                      <option value="Port de Barcelona">Port de Barcelona (Terminal BEST / APM)</option>
-                      <option value="ZAL Barcelona Prat">ZAL Barcelona Prat (Hub WMS)</option>
-                      <option value="Port de València">Port de València (Moll de la Xina)</option>
-                      <option value="Lleida Terminal Ferroviària">Lleida Plataforma Intermodal</option>
-                    </select>
+                      <Activity className="w-3.5 h-3.5" />
+                      {telemetryLive ? 'LIVE' : 'PAUSA'}
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1">Destinació Internacional:</label>
-                    <select
-                      value={rutaSimulada.desti}
-                      onChange={(e) => setRutaSimulada({ ...rutaSimulada, desti: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-medium focus:ring-2 focus:ring-pink-500 outline-hidden"
-                    >
-                      <option value="Xangai (Port de Yangshan)">Xangai (Port de Yangshan, Xina)</option>
-                      <option value="Rotterdam (Port / Hub Botlek)">Rotterdam (Països Baixos / Corredor Nord)</option>
-                      <option value="Nova York (Port de NY & NJ)">Nova York / Nova Jersey (EUA)</option>
-                      <option value="Hamburg (Terminal Waltershof)">Hamburg (Alemanya / Mar del Nord)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1">Mode de Transport Recomanat:</label>
-                    <div className="grid grid-cols-2 gap-2">
+                  {/* Selector de camiones activos */}
+                  <div className="flex items-center gap-1 p-1 bg-[#102C09] rounded-lg my-4 border border-white/15">
+                    {HERO_TELEMETRY_TRUCKS.map((tr, i) => (
                       <button
+                        key={tr.id}
                         type="button"
-                        onClick={() => setRutaSimulada({ ...rutaSimulada, mode: 'maritim-fcl' })}
-                        className={`py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-                          rutaSimulada.mode === 'maritim-fcl'
-                            ? 'bg-purple-900 border-pink-500 text-white shadow-sm'
-                            : 'bg-slate-950 border-purple-900 text-slate-400 hover:text-white'
+                        onClick={() => setHeroTruckIdx(i)}
+                        className={`flex-1 py-1.5 px-2 text-xs font-mono rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                          heroTruckIdx === i
+                            ? 'bg-[#F5E626] text-[#14360E] font-extrabold'
+                            : 'text-white/80 hover:text-white'
                         }`}
                       >
-                        <Ship className="w-3.5 h-3.5" />
-                        Marítim FCL
+                        {tr.id}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setRutaSimulada({ ...rutaSimulada, mode: 'terrestre-frigo' })}
-                        className={`py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-                          rutaSimulada.mode === 'terrestre-frigo'
-                            ? 'bg-purple-900 border-pink-500 text-white shadow-sm'
-                            : 'bg-slate-950 border-purple-900 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        <Truck className="w-3.5 h-3.5" />
-                        Carretera FTL
-                      </button>
+                    ))}
+                  </div>
+
+                  {/* Visualizador esquemático de ruta por autovía */}
+                  <div className="p-3 rounded-lg bg-[#215314] border border-white/15 mb-3">
+                    <div className="flex items-center justify-between text-xs font-mono text-white">
+                      <span>{currentHeroTruck.origenCode}</span>
+                      <div className="flex-1 mx-3 flex items-center gap-2">
+                        <span className="h-px flex-1 bg-white/40" />
+                        <Truck className="w-3.5 h-3.5 text-[#F5E626]" />
+                        <span className="h-px flex-1 border-t border-dashed border-white/40" />
+                      </div>
+                      <span className="text-[#F5E626] font-bold">{currentHeroTruck.destinoCode}</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between text-[11px] text-white/85 gap-2">
+                      <span>{currentHeroTruck.ruta}</span>
+                      <span className="text-[#A3E635] font-semibold text-right">{currentHeroTruck.carga}</span>
                     </div>
                   </div>
 
-                  {/* Resultat de l'estimació de ruta */}
-                  <div className="p-4 rounded-xl bg-purple-950/60 border border-purple-800/80 space-y-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Temps de trànsit estimat (ETA):</span>
-                      <strong className="text-pink-300 font-mono text-sm">{estimacioActual.temps}</strong>
+                  {/* Cuadrícula de 4 parámetros telemétricos clínicos */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
+                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                        <ThermometerSnowflake className="w-3.5 h-3.5 text-[#F5E626]" />
+                        Temp. Caja
+                      </span>
+                      <div className="mt-1 flex items-baseline gap-1 font-mono">
+                        <span className="text-2xl font-bold text-[#F5E626]">{liveHeroTemp}</span>
+                        <span className="text-xs text-white/85">°C</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Distància operativa:</span>
-                      <span className="text-white font-mono">{estimacioActual.dist}</span>
+
+                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
+                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                        <Gauge className="w-3.5 h-3.5 text-[#A3E635]" />
+                        Velocidad Ruta
+                      </span>
+                      <div className="mt-1 flex items-baseline gap-1 font-mono">
+                        <span className="text-xl font-bold text-white">{currentHeroTruck.velocidad}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Incoterm® 2020 habitual:</span>
-                      <span className="text-fuchsia-300 font-semibold">{estimacioActual.incoterm}</span>
+
+                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
+                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                        <FlaskConical className="w-3.5 h-3.5 text-[#A3E635]" />
+                        Humedad Relativa
+                      </span>
+                      <div className="mt-1 flex items-baseline gap-1 font-mono">
+                        <span className="text-xl font-bold text-white">{currentHeroTruck.humedad}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Empremta ecològica:</span>
-                      <span className="text-emerald-400 font-medium">{estimacioActual.reduccio}</span>
+
+                    <div className="p-3.5 rounded-lg bg-[#215314] border border-white/15">
+                      <span className="text-[11px] text-white/80 flex items-center gap-1.5">
+                        <ShieldPlus className="w-3.5 h-3.5 text-[#F5E626]" />
+                        Precinto Sanitario
+                      </span>
+                      <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#A3E635]">
+                        <Lock className="w-3.5 h-3.5 shrink-0" />
+                        <span>{currentHeroTruck.sello}</span>
+                      </div>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={handleApplySimulatedRoute}
-                    className="w-full py-2.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-pink-950/50"
-                  >
-                    Carregar aquesta ruta al formulari de cotització
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
+            </div>
 
+            {/* Franja inferior de métricas verificadas en carretera */}
+            <div className="mt-12 pt-8 border-t border-white/20 grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <div className="text-2xl font-bold font-mono text-white">99.97 %</div>
+                <div className="text-xs text-white/85 mt-1">Estabilidad térmica anual en camiones ATP FRC</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[#F5E626]">0 Rupturas</div>
+                <div className="text-xs text-white/85 mt-1">Traslado puerta a farmacia hospitalaria sin trasbordos</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-white">48 Unidades</div>
+                <div className="text-xs text-white/85 mt-1">Tráileres bi-zona, rígidos 18t y furgones clínicos</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[#A3E635]">medicam.cat</div>
+                <div className="text-xs text-white/85 mt-1">Bases propias en Barcelona ZAL y Madrid con QP</div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ======================================================== */}
-        {/* 3. CATÀLEG DE SERVEIS: 3 PRODUCTES LOGÍSTICS CONCRETS    */}
-        {/* ======================================================== */}
-        <section id="serveis" className="py-24 bg-slate-900 text-slate-100 border-t border-b border-purple-950">
+        {/* ===================================================================== */}
+        {/* BENTO GRID DE SERVICIOS HOSPITALARIOS Y FARMACÉUTICOS EN CAMIÓN       */}
+        {/* ===================================================================== */}
+        <section id="servicios" className="py-20 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
-                  <span>Catàleg Tècnic Oficial</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Especificacions Tècniques de Comerç Internacional</span>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 text-xs font-bold text-[#2E741B] uppercase tracking-wider">
+                  <Stethoscope className="w-4 h-4" />
+                  Logística Hospitalaria y Farmacéutica en Camión
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                  Productes i Serveis de Transport Especialitzat
+                <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#14360E] text-balance">
+                  Transporte sanitario en camión adaptado a cada medicamento
                 </h2>
-                <p className="mt-3 text-slate-400 text-sm max-w-2xl leading-relaxed">
-                  Consulteu les tres unitats de negoci logístic d'Adam Transport. Dades tècniques completes segons normatives internacionals ISO, ATP i OEA.
+              </div>
+              <p className="text-slate-600 text-sm max-w-md leading-relaxed">
+                Cada vehículo opera como una cámara limpia móvil certificada ATP Clase FRC, conectando laboratorios con farmacias hospitalarias sin rupturas térmicas.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Tarjeta Bento 01 (Ancha 7 cols - Verde Farmacia Protagonista) */}
+              <article className="lg:col-span-7 bg-[#2E741B] text-white rounded-2xl p-8 flex flex-col justify-between border border-[#225814]">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="text-xs font-mono font-semibold text-[#F5E626]">01 · Furgón Clínico Dedicado (Puerta a Farmacia)</span>
+                    <div className="w-11 h-11 rounded-xl bg-[#173E0D] border border-white/20 flex items-center justify-center">
+                      <Dna className="w-5 h-5 text-[#F5E626]" />
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white leading-snug">
+                    Entrega Directa de Medicamentos Hospitalarios y Terapias Celulares
+                  </h3>
+                  <p className="mt-3 text-sm text-white/90 leading-relaxed max-w-xl">
+                    Vehículos exclusivos directos desde el laboratorio hasta el servicio de Farmacia Hospitalaria o Hematología (Vall d’Hebron, La Paz, La Fe, Virgen Macarena, Virgen del Rocío) con bancada antivibración y doble sonda PT100 para CAR-T y biológicos.
+                  </p>
+                </div>
+                <div className="mt-8 pt-5 border-t border-white/20 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+                  <span className="text-[#F5E626] inline-flex items-center gap-1.5 font-semibold">
+                    <Syringe className="w-4 h-4" />
+                    Salida inmediata desde BCN / MAD en &lt; 30 min
+                  </span>
+                  <a href="#cotizador" className="text-[#14360E] bg-[#F5E626] hover:bg-[#E5D618] px-4 py-2 rounded-lg font-sans font-extrabold transition-colors">
+                    Solicitar furgón directo →
+                  </a>
+                </div>
+              </article>
+
+              {/* Tarjeta Bento 02 (5 cols - Blanco Clínico) */}
+              <article className="lg:col-span-5 bg-[#F4F7F2] rounded-2xl border border-[#2E741B]/20 p-8 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="text-xs font-mono font-bold text-[#2E741B]">02 · Tráileres Bi-Temperatura FRC</span>
+                    <div className="w-11 h-11 rounded-xl bg-white border border-[#2E741B]/25 flex items-center justify-center">
+                      <Pill className="w-5 h-5 text-[#2E741B]" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#14360E]">
+                    Líneas Diarias Bi-Zona por Toda la Península y Baleares
+                  </h3>
+                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+                    Camiones frigoríficos de 18 t y 33 palés con mamparo isotermo divisor para transportar en el mismo viaje vacunas congeladas (-20 °C) y fármacos refrigerados (+2/+8 °C), más enlace Ro-Ro 380V a Palma.
+                  </p>
+                </div>
+                <div className="mt-8 pt-5 border-t border-[#2E741B]/15 flex items-center justify-between text-xs text-slate-600 font-mono">
+                  <span>ATP Clase FRC · Doble evaporador</span>
+                  <a href="#espectro" className="text-[#2E741B] font-sans font-bold hover:underline">
+                    Ver rangos →
+                  </a>
+                </div>
+              </article>
+
+              {/* Tarjeta Bento 03 (5 cols - Fotografía en Duotono Verde Farmacia) */}
+              <article className="lg:col-span-5 bg-[#F4F7F2] rounded-2xl border border-[#2E741B]/20 overflow-hidden flex flex-col">
+                <div className="h-48 pharma-duotone-wrap relative overflow-hidden">
+                  <img
+                    src="/src/assets/images/fleet_clinical_delivery_van_1795018963295.jpg"
+                    alt="Furgón clínico y camión farmacéutico MEDICAM entregando medicamentos en hospital universitario español"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover pharma-duotone-img"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#173E0D]/70 via-transparent to-transparent" />
+                </div>
+                <div className="p-7 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-mono font-bold text-[#2E741B]">03 · Capilaridad Hospitalaria</span>
+                      <Hospital className="w-5 h-5 text-[#2E741B]" />
+                    </div>
+                    <h3 className="text-lg font-bold text-[#14360E]">
+                      Entrega Directa en Farmacia Hospitalaria y Ensayos Clínicos
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                      Furgones silenciosos ECO/CERO autorizados para acceso a recintos hospitalarios y centros de investigación clínica en todo el territorio nacional.
+                    </p>
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-[#2E741B]/15 text-xs font-mono text-[#2E741B] font-bold flex items-center gap-1.5">
+                    <ClipboardCheck className="w-4 h-4" />
+                    Recepción biométrica y albarán térmico digital
+                  </div>
+                </div>
+              </article>
+
+              {/* Tarjeta Bento 04 (Ancha 7 cols - Validación Médica AEMPS) */}
+              <article className="lg:col-span-7 bg-[#F4F7F2] rounded-2xl border border-[#2E741B]/20 p-8 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="text-xs font-mono font-bold text-[#2E741B]">04 · Auditoría Clínica &amp; Bioseguridad</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-white border border-[#2E741B]/25 flex items-center justify-center">
+                        <Microscope className="w-5 h-5 text-[#2E741B]" />
+                      </div>
+                      <div className="w-10 h-10 rounded-xl bg-[#2E741B] flex items-center justify-center">
+                        <ShieldPlus className="w-5 h-5 text-[#F5E626]" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#14360E]">
+                    Mapeo Térmico 3D, Termógrafos EN 12830 y Supervisión QP
+                  </h3>
+                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+                    Cada caja frigorífica cuenta con cualificación IQ/OQ/PQ en verano e invierno español, precintos electrónicos TAPA TSR-1 contra robo y registro de temperatura inmutable validado por nuestra Persona Cualificada (QP) conforme a la AEMPS.
+                  </p>
+                </div>
+                <div className="mt-8 pt-5 border-t border-[#2E741B]/15 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3 rounded-lg bg-white border border-[#2E741B]/20">
+                    <span className="text-slate-500 block">Calibración Sondas</span>
+                    <strong className="text-[#14360E] font-mono">UNE-EN 12830 (Anual)</strong>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white border border-[#2E741B]/20">
+                    <span className="text-slate-500 block">Seguridad en Ruta</span>
+                    <strong className="text-[#2E741B] font-mono">Nivel TAPA TSR-1</strong>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white border border-[#2E741B]/20">
+                    <span className="text-slate-500 block">Certificado Lote</span>
+                    <strong className="text-[#14360E] font-mono">Curva PDF a la Entrega</strong>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <MedicalPulseDivider />
+
+        {/* ===================================================================== */}
+        {/* MAPA INTERACTIVO DE CORREDORES DE AUTOVÍA EN ESPAÑA                   */}
+        {/* ===================================================================== */}
+        <section id="corredores" className="py-20 bg-[#F4F7F2] border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl mb-10">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-[#2E741B] uppercase tracking-wider">
+                <Navigation className="w-4 h-4" />
+                Red Terrestre Exclusiva en España
+              </div>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#14360E] text-balance">
+                Autovías farmacéuticas y hospitales conectados por carretera
+              </h2>
+              <p className="mt-3 text-slate-600 text-base">
+                Selecciona una base logística en el mapa de España para consultar los tiempos de tránsito en camión, capacidad de muelles climatizados y hospitales atendidos.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              {/* Mapa Vectorial Interactivo de Corredores de Carretera en España */}
+              <div className="lg:col-span-7 bg-[#173E0D] clinical-grid-bg rounded-2xl p-5 sm:p-6 border border-[#2E741B] flex flex-col justify-between">
+                <div className="flex items-center justify-between text-xs text-white/85 mb-3">
+                  <span className="font-mono text-[#F5E626] font-bold">CORREDORES DE CAMIÓN FRIGORÍFICO · ESPAÑA</span>
+                  <span>Selecciona una plataforma</span>
+                </div>
+
+                <svg viewBox="0 0 560 360" className="w-full h-auto select-none">
+                  {/* Silueta Península Ibérica */}
+                  <path
+                    d="M 88 46 L 182 40 L 285 52 L 420 88 L 456 114 L 434 148 L 382 176 L 366 224 L 328 278 L 266 316 L 182 318 L 146 292 L 128 250 L 136 194 L 120 136 L 84 88 Z"
+                    fill="#276217"
+                    stroke="#A3E635"
+                    strokeOpacity="0.45"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
+                  {/* Islas Baleares */}
+                  <path d="M 442 186 L 478 178 L 486 196 L 456 204 Z" fill="#276217" stroke="#A3E635" strokeOpacity="0.55" strokeWidth="1.2" />
+                  <path d="M 418 206 L 432 202 L 434 214 L 420 214 Z" fill="#276217" stroke="#A3E635" strokeOpacity="0.55" strokeWidth="1.2" />
+
+                  {/* Trazado de Autovías Sanitarias */}
+                  {SPAIN_HUBS.map((hub) => {
+                    const isSelected = hub.codigo === selectedHubCode;
+                    const hubY = hub.svgY - 8;
+                    return (
+                      <g key={`road-${hub.codigo}`}>
+                        {hub.codigo !== 'MAD' && hub.codigo !== 'PMI' && (
+                          <line
+                            x1={256}
+                            y1={160}
+                            x2={hub.svgX}
+                            y2={hubY}
+                            stroke={isSelected ? '#F5E626' : '#A3E635'}
+                            strokeWidth={isSelected ? 2.5 : 1.1}
+                            strokeOpacity={isSelected ? 0.95 : 0.4}
+                            strokeDasharray={isSelected ? undefined : '4 4'}
+                          />
+                        )}
+                        {hub.codigo !== 'BCN' && (
+                          <line
+                            x1={432}
+                            y1={124}
+                            x2={hub.svgX}
+                            y2={hubY}
+                            stroke={isSelected ? '#F5E626' : '#A3E635'}
+                            strokeWidth={isSelected ? 2 : 0.9}
+                            strokeOpacity={isSelected ? 0.85 : 0.28}
+                            strokeDasharray={hub.codigo === 'PMI' ? '2 3' : '3 4'}
+                          />
+                        )}
+                      </g>
+                    );
+                  })}
+
+                  {/* Nodos interactivos de bases de camión */}
+                  {SPAIN_HUBS.map((hub) => {
+                    const isSelected = hub.codigo === selectedHubCode;
+                    const hubY = hub.svgY - 8;
+                    return (
+                      <g
+                        key={hub.codigo}
+                        onClick={() => setSelectedHubCode(hub.codigo)}
+                        className="cursor-pointer"
+                      >
+                        {isSelected && (
+                          <circle
+                            cx={hub.svgX}
+                            cy={hubY}
+                            r="16"
+                            fill="#F5E626"
+                            fillOpacity="0.3"
+                          />
+                        )}
+                        <circle
+                          cx={hub.svgX}
+                          cy={hubY}
+                          r={isSelected ? 8 : 6}
+                          fill={isSelected ? '#F5E626' : '#4FA825'}
+                          stroke="#FFFFFF"
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={hub.svgX}
+                          y={hubY - 12}
+                          textAnchor="middle"
+                          className={`text-[11px] font-mono font-bold ${isSelected ? 'fill-[#F5E626]' : 'fill-white'}`}
+                        >
+                          {hub.codigo}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                <div className="flex flex-wrap gap-1.5 pt-3 border-t border-white/15">
+                  {SPAIN_HUBS.map((hub) => (
+                    <button
+                      key={hub.codigo}
+                      type="button"
+                      onClick={() => setSelectedHubCode(hub.codigo)}
+                      className={`px-2.5 py-1 rounded text-xs font-mono transition-colors cursor-pointer ${
+                        hub.codigo === selectedHubCode
+                          ? 'bg-[#F5E626] text-[#14360E] font-extrabold'
+                          : 'bg-[#215314] text-white/90 border border-white/20 hover:border-[#F5E626]'
+                      }`}
+                    >
+                      {hub.codigo} · {hub.ciudad}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ficha Operativa de la Base Seleccionada */}
+              <div className="lg:col-span-5 bg-white rounded-2xl border border-[#2E741B]/25 p-7 flex flex-col justify-between">
+                <div className="space-y-5">
+                  <div className="pb-4 border-b border-slate-200 flex items-start justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-mono font-bold text-[#2E741B]">
+                        {activeSpainHub.comunidad} · {activeSpainHub.corredor}
+                      </span>
+                      <h3 className="text-2xl font-bold text-[#14360E] mt-1">
+                        {activeSpainHub.ciudad} ({activeSpainHub.codigo})
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">{activeSpainHub.plataforma}</p>
+                    </div>
+                    <div className="w-11 h-11 rounded-xl bg-[#F4F7F2] border border-[#2E741B]/25 flex items-center justify-center shrink-0">
+                      <Cross className="w-5 h-5 text-[#2E741B]" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5 text-[#2E741B]" />
+                        Tiempo de Tránsito en Camión
+                      </span>
+                      <p className="font-mono font-bold text-[#14360E] mt-1">
+                        {activeSpainHub.tiempoDesdeBase}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                        <ThermometerSnowflake className="w-3.5 h-3.5 text-[#2E741B]" />
+                        Muelles y Cámaras Frigoríficas
+                      </span>
+                      <p className="text-slate-700 mt-1 leading-relaxed">
+                        {activeSpainHub.capacidades}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                        <Syringe className="w-3.5 h-3.5 text-[#2E741B]" />
+                        Especialidad Farmacológica
+                      </span>
+                      <p className="text-slate-700 mt-1">
+                        {activeSpainHub.cargaPrincipal}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 mb-2">
+                        <Hospital className="w-3.5 h-3.5 text-[#2E741B]" />
+                        Hospitales Conectados Directamente
+                      </span>
+                      <ul className="space-y-1.5">
+                        {activeSpainHub.hospitalesClave.map((hosp) => (
+                          <li key={hosp} className="flex items-center gap-2 text-xs text-[#14360E] font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#2E741B] shrink-0" />
+                            <span>{hosp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-5 border-t border-slate-200">
+                  <a
+                    href="#cotizador"
+                    onClick={() => {
+                      if (activeSpainHub.codigo === 'BCN') {
+                        setQuoteOrigin(activeSpainHub.optionLabel);
+                      } else {
+                        setQuoteDest(activeSpainHub.optionLabel);
+                      }
+                    }}
+                    className="w-full py-3 px-4 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white text-sm font-bold inline-flex items-center justify-center gap-2 transition-colors"
+                  >
+                    Cotizar camión hacia/desde {activeSpainHub.ciudad}
+                    <ArrowRight className="w-4 h-4 text-[#F5E626]" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================== */}
+        {/* ESPECTRO DE CADENA DE FRÍO CON ICONOGRAFÍA MÉDICA                     */}
+        {/* ===================================================================== */}
+        <section id="espectro" className="py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl mb-10">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-[#2E741B] uppercase tracking-wider">
+                <FlaskConical className="w-4 h-4" />
+                Espectro Térmico en Carretera
+              </div>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#14360E] text-balance">
+                Cobertura completa de -196 °C a +25 °C
+              </h2>
+              <p className="mt-3 text-slate-600 text-base">
+                Selecciona un rango térmico para consultar la tecnología de refrigeración embarcada, tolerancia en autovía y medicamentos habituales.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-1.5 bg-[#F4F7F2] rounded-xl border border-[#2E741B]/20 mb-8">
+              {COLD_RANGES.map((range) => {
+                const isSelected = range.id === activeRangeId;
+                return (
+                  <button
+                    key={range.id}
+                    type="button"
+                    onClick={() => setActiveRangeId(range.id)}
+                    className={`px-3 py-3 rounded-lg text-left transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#2E741B] text-white shadow-sm'
+                        : 'text-[#14360E] hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`text-xs font-mono font-bold ${isSelected ? 'text-[#F5E626]' : 'text-[#2E741B]'}`}>
+                        {range.rangoCorto}
+                      </span>
+                      {getColdRangeIcon(range.id, isSelected)}
+                    </div>
+                    <div className="text-xs font-semibold mt-1 truncate">
+                      {range.nombre.split(' (')[0]}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="bg-[#F4F7F2] rounded-2xl border border-[#2E741B]/20 p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-7 space-y-6">
+                <div className="pb-5 border-b border-[#2E741B]/15 flex flex-wrap items-baseline justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-mono text-[#2E741B] font-bold">
+                      Especificación Clínica en Vehículo
+                    </span>
+                    <h3 className="text-2xl font-bold text-[#14360E] mt-1">
+                      {activeColdSpec.nombre}
+                    </h3>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-mono font-bold text-[#2E741B]">
+                    {activeColdSpec.rango}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 block">Carrocería / Embalaje Validado</span>
+                    <p className="text-[#14360E] font-medium mt-1 leading-relaxed">
+                      {activeColdSpec.embalaje}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 block">Autonomía Térmica en Ruta</span>
+                    <p className="text-[#14360E] font-medium mt-1 leading-relaxed">
+                      {activeColdSpec.autonomia}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 block">Tolerancia y Consigna</span>
+                    <p className="text-[#14360E] font-medium mt-1 leading-relaxed">
+                      {activeColdSpec.tolerancia}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 block">Instrumentación IoT</span>
+                    <p className="text-[#14360E] font-medium mt-1 leading-relaxed">
+                      {activeColdSpec.monitoreo}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#2E741B]/15">
+                  <span className="text-xs font-semibold text-slate-500 block">Protocolo de Carga y Entrega</span>
+                  <p className="text-sm text-[#14360E] mt-1 leading-relaxed">
+                    {activeColdSpec.protocolo}
+                  </p>
+                </div>
+              </div>
+
+              <div className="lg:col-span-5 bg-white rounded-xl border border-[#2E741B]/20 p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#14360E] uppercase tracking-wider mb-4">
+                    <Pill className="w-4 h-4 text-[#2E741B]" />
+                    Medicamentos y Cargas Habituales
+                  </div>
+                  <ul className="space-y-3">
+                    {activeColdSpec.medicamentos.map((med) => (
+                      <li key={med} className="flex items-start gap-2.5 text-sm text-slate-700">
+                        <CheckCircle2 className="w-4 h-4 text-[#2E741B] shrink-0 mt-0.5" />
+                        <span>{med}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-6 pt-5 border-t border-slate-200">
+                  <a
+                    href="#cotizador"
+                    onClick={() => setQuoteTemp(activeColdSpec.id)}
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white text-sm font-bold inline-flex items-center justify-center gap-2 transition-colors"
+                  >
+                    Cotizar camión en este rango
+                    <ArrowRight className="w-4 h-4 text-[#F5E626]" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================== */}
+        {/* FLOTA DE CAMIONES FRIGORÍFICOS Y UNIDADES CLÍNICAS                    */}
+        {/* ===================================================================== */}
+        <section id="flota" className="py-20 bg-[#F4F7F2] border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 text-xs font-bold text-[#2E741B] uppercase tracking-wider">
+                  <Truck className="w-4 h-4" />
+                  Parque Móvil Certificado ATP FRC
+                </div>
+                <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#14360E]">
+                  Flota de Camiones Frigoríficos y Unidades Clínicas
+                </h2>
+                <p className="mt-3 text-slate-600 text-base">
+                  Tráileres bi-zona de gran capacidad, rígidos hospitalarios de 18 toneladas y furgones isotermos criogénicos dedicados exclusivamente al transporte médico en España.
                 </p>
               </div>
 
-              {/* Botons de filtre interactius */}
-              <div className="flex flex-wrap gap-1.5 p-1 bg-slate-950 rounded-xl border border-purple-900/70 self-start md:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('tots')}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    activeCategory === 'tots'
-                      ? 'bg-purple-900 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Tots els Serveis (3)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('maritim')}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    activeCategory === 'maritim'
-                      ? 'bg-purple-900 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Marítim FCL
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('terrestre')}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    activeCategory === 'terrestre'
-                      ? 'bg-purple-900 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Terrestre Frigorífic
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('magatzem')}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    activeCategory === 'magatzem'
-                      ? 'bg-purple-900 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Magatzem WMS ZAL
-                </button>
+              <div className="inline-flex items-center gap-1 p-1 bg-white border border-[#2E741B]/25 rounded-lg self-start">
+                {[
+                  { id: 'todos', label: 'Toda la Flota' },
+                  { id: 'pesado', label: 'Tráileres y Rígidos' },
+                  { id: 'clinico', label: 'Unidades Clínicas' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setFleetFilter(tab.id as typeof fleetFilter)}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                      fleetFilter === tab.id
+                        ? 'bg-[#2E741B] text-white'
+                        : 'text-[#14360E] hover:bg-[#F4F7F2]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Graella dels 3 Productes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map((prod) => (
-                <div
-                  key={prod.id}
-                  className="group bg-slate-950 rounded-2xl overflow-hidden border border-purple-900/60 hover:border-pink-500/80 transition-all duration-300 flex flex-col justify-between shadow-xl shadow-purple-950/20"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFleet.map((item) => (
+                <article
+                  key={item.id}
+                  className="bg-white rounded-2xl border border-[#2E741B]/20 overflow-hidden flex flex-col justify-between"
                 >
                   <div>
-                    {/* Contenidor de Fotografia Real Local amb Fallback */}
-                    <div className="relative h-60 overflow-hidden bg-purple-950">
+                    <div className="h-48 pharma-duotone-wrap overflow-hidden relative">
                       <img
-                        src={prod.imatge}
-                        alt={prod.nomTecnic}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (!target.dataset.triedFallback && prod.fallbackImatge) {
-                            target.dataset.triedFallback = 'true';
-                            target.src = prod.fallbackImatge;
-                          }
-                        }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        src={item.imagen}
+                        alt={item.modelo}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover pharma-duotone-img"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-
-                      {/* Referència Interna i Codi */}
-                      <div className="absolute top-3 left-3 bg-slate-950/90 text-pink-300 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md border border-pink-400/30">
-                        {prod.refInterna}
-                      </div>
-
-                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                        <span className="font-mono text-slate-300 text-[11px] bg-slate-900/90 px-2 py-0.5 rounded border border-purple-900">
-                          {prod.codiTecnic.split(' ')[0]}
-                        </span>
-                        <span className="bg-pink-600 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded">
-                          {prod.categoria === 'maritim' ? 'Marítim FCL' : prod.categoria === 'terrestre' ? 'Carretera ATP' : 'Hub ZAL 45k'}
-                        </span>
-                      </div>
                     </div>
-
                     <div className="p-6">
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-pink-400 transition-colors leading-snug">
-                        {prod.nomTecnic}
-                      </h3>
-
-                      <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed mb-4">
-                        {prod.descripcioCompleta}
-                      </p>
-
-                      {/* Especificacions Tècniques Rúbrica */}
-                      <div className="bg-slate-900/90 rounded-xl p-3.5 border border-purple-900/50 space-y-1.5 text-xs mb-4">
-                        <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
-                          <span className="text-slate-400">Volum / Capacitat:</span>
-                          <span className="font-semibold text-white">{prod.especificacions.volum.split('/')[0]}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
-                          <span className="text-slate-400">Càrrega Màxima (Payload):</span>
-                          <span className="font-semibold text-pink-300">{prod.especificacions.payload.split(' ')[0]} kg</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
-                          <span className="text-slate-400">Capacitat Palets:</span>
-                          <span className="font-semibold text-white">{prod.especificacions.capacitatPalets.split('(')[0]}</span>
-                        </div>
-                        {prod.especificacions.temperatura && (
-                          <div className="flex justify-between text-slate-300 border-b border-purple-900/40 pb-1">
-                            <span className="text-slate-400">Rang Tèrmic ATP:</span>
-                            <span className="font-semibold text-fuchsia-300">{prod.especificacions.temperatura.split('amb')[0]}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between text-slate-300 pt-0.5">
-                          <span className="text-slate-400">Marc Normatiu:</span>
-                          <span className="font-semibold text-white truncate max-w-[170px]">{prod.normativa.split('/')[0]}</span>
-                        </div>
+                      <div className="text-xs font-mono text-[#2E741B] font-bold">
+                        {item.categoria === 'pesado' ? 'Transporte Pesado FRC' : 'Unidad Clínica Especial'} · {item.certificacion}
                       </div>
+                      <h3 className="text-lg font-bold text-[#14360E] mt-1">{item.modelo}</h3>
+                      <p className="text-xs text-slate-500 mt-1">{item.subtitulo}</p>
 
-                      <div className="space-y-1 text-xs text-slate-300 mb-2">
-                        {prod.avantatges.slice(0, 2).map((av, idx) => (
-                          <div key={idx} className="flex items-start gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-pink-400 shrink-0 mt-0.5" />
-                            <span className="text-slate-300">{av}</span>
-                          </div>
-                        ))}
+                      <div className="mt-4 pt-4 border-t border-slate-200 space-y-2 text-xs">
+                        <div className="flex justify-between gap-2">
+                          <span className="text-slate-500">Capacidad:</span>
+                          <span className="font-mono font-semibold text-[#14360E] text-right">{item.capacidad}</span>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <span className="text-slate-500">Autonomía:</span>
+                          <span className="font-mono font-semibold text-[#14360E] text-right">{item.autonomia}</span>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <span className="text-slate-500">Rango Térmico:</span>
+                          <span className="font-mono font-bold text-[#2E741B] text-right">{item.rangoTermico}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-6 pt-0 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedProduct(prod)}
-                      className="flex-1 py-2.5 px-3 rounded-lg bg-purple-900/40 hover:bg-purple-900/70 border border-purple-800 text-purple-200 text-xs font-semibold transition-colors cursor-pointer text-center"
-                    >
-                      Veure Fitxa Tècnica
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handlePreselectService(prod.refInterna)}
-                      className="py-2.5 px-3 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center gap-1 shadow-sm"
-                    >
-                      Cotitzar
-                      <ArrowRight className="w-3.5 h-3.5 text-white" />
-                    </button>
+                  <div className="px-6 py-4 bg-[#F4F7F2] border-t border-[#2E741B]/15 grid grid-cols-2 gap-3 text-[11px]">
+                    {item.especificaciones.map((spec) => (
+                      <div key={spec.etiqueta}>
+                        <span className="text-slate-500 block">{spec.etiqueta}</span>
+                        <strong className="font-mono text-[#14360E]">{spec.valor}</strong>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ======================================================== */}
-        {/* 4. SECCIÓ SEGUIMENT D'ENVIAMENTS & BASE DE DADES SHEETDB */}
-        {/* ======================================================== */}
-        <section id="tracking" className="py-24 bg-slate-950 text-slate-100 border-b border-purple-950">
+        {/* ===================================================================== */}
+        {/* RASTREADOR SATELITAL DE CAMIONES EN TIEMPO REAL                        */}
+        {/* ===================================================================== */}
+        <section id="tracker" className="py-20 bg-[#2E741B] clinical-grid-bg text-white border-b border-[#225814]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
-                  <span className="inline-flex items-center gap-1.5 text-pink-300">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Base de Dades Real Connectada
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>SheetDB API (fst1vl3p3sehx)</span>
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                  Traçabilitat & Seguiment d'Enviaments en Temps Real
-                </h2>
-                <p className="mt-3 text-slate-400 text-sm max-w-2xl leading-relaxed">
-                  Sistema de traçabilitat connectat directament a la nostra base de dades a Google Sheets mitjançant SheetDB. Consulteu l'estat d'una càrrega, posició geogràfica i data estimada de lliurament (ETA).
-                </p>
+            <div className="max-w-2xl mb-10">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-[#F5E626] uppercase tracking-wider">
+                <Activity className="w-4 h-4" />
+                Live Cold Chain Truck Tracker
               </div>
-
-              {/* Botons d'acció de la base de dades */}
-              <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
-                <a
-                  href="/tracking"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.history.pushState({}, '', '/tracking');
-                    setCurrentRoute('tracking');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-600 hover:from-purple-600 hover:to-pink-500 text-xs font-bold text-white shadow-md shadow-purple-950/30 transition-all cursor-pointer"
-                >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                  Obrir Pàgina Dedicada (/tracking)
-                </a>
-                <button
-                  type="button"
-                  onClick={fetchSheetDb}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/50 hover:bg-purple-900 border border-purple-800 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 text-pink-400 ${dbStatus === 'loading' ? 'animate-spin' : ''}`} />
-                  Sincronitzar
-                </button>
-              </div>
-            </div>
-
-            {/* Barra de cerca per Codi de Seguiment o Client */}
-            <div className="bg-slate-900 rounded-2xl border border-purple-900/70 p-6 sm:p-8 shadow-2xl mb-8">
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <div className="relative flex-1 w-full">
-                  <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={trackingQuery}
-                    onChange={(e) => setTrackingQuery(e.target.value)}
-                    placeholder="Introdueix codi de seguiment (Ex: ATL-MAR-7410, ATL-REEF-8840 o nom del client)..."
-                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950 border border-purple-800 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden placeholder:text-slate-500"
-                  />
-                  {trackingQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setTrackingQuery('')}
-                      className="absolute right-3.5 top-3.5 text-xs text-slate-400 hover:text-white"
-                    >
-                      Netejar
-                    </button>
-                  )}
-                </div>
-
-                {/* Exemples ràpids per al professor o avaluador */}
-                <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto">
-                  <span className="text-slate-400 text-[11px]">Provar codis:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTrackingQuery('ATL-MAR-7410');
-                      const trobat = dbTrackingList.find(t => t.tracking_code === 'ATL-MAR-7410');
-                      if (trobat) setSelectedTracking(trobat);
-                    }}
-                    className="px-2.5 py-1 rounded bg-slate-950 hover:bg-purple-900/60 border border-purple-800 text-pink-300 font-mono text-xs cursor-pointer"
-                  >
-                    ATL-MAR-7410
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTrackingQuery('ATL-REEF-8840');
-                      const trobat = dbTrackingList.find(t => t.tracking_code === 'ATL-REEF-8840');
-                      if (trobat) setSelectedTracking(trobat);
-                    }}
-                    className="px-2.5 py-1 rounded bg-slate-950 hover:bg-purple-900/60 border border-purple-800 text-pink-300 font-mono text-xs cursor-pointer"
-                  >
-                    ATL-REEF-8840
-                  </button>
-                  {lastCreatedCode && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTrackingQuery(lastCreatedCode);
-                        const trobat = dbTrackingList.find(t => t.tracking_code === lastCreatedCode);
-                        if (trobat) setSelectedTracking(trobat);
-                      }}
-                      className="px-2.5 py-1 rounded bg-pink-950 hover:bg-pink-900/80 border border-pink-500 text-pink-200 font-mono text-xs cursor-pointer"
-                    >
-                      El meu pressupost (#{lastCreatedCode})
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Estat de connexió amb l'endpoint oficial */}
-              <div className="mt-4 pt-4 border-t border-purple-900/50 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
-                <span className="flex items-center gap-2">
-                  <Database className="w-3.5 h-3.5 text-pink-400" />
-                  Endpoint API actiu: <code className="text-pink-300 font-mono bg-slate-950 px-2 py-0.5 rounded border border-purple-900/80">https://sheetdb.io/api/v1/fst1vl3p3sehx</code>
-                </span>
-                <span className="text-slate-400">
-                  {trackingFiltrats.length} {trackingFiltrats.length === 1 ? "registre trobat" : "registres a la base de dades"}
-                </span>
-              </div>
-            </div>
-
-            {/* Visualització de l'expedició seleccionada */}
-            {selectedTracking && (
-              <div className="bg-slate-900 rounded-2xl border border-purple-800/80 p-6 sm:p-8 shadow-2xl mb-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-purple-900/70">
-                  <div>
-                    <span className="text-xs font-mono font-bold text-pink-400 bg-purple-950 px-3 py-1 rounded-md border border-pink-500/40">
-                      {selectedTracking.tracking_code}
-                    </span>
-                    <h3 className="text-xl font-bold text-white mt-2">
-                      {selectedTracking.client}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Servei contractat: <span className="text-slate-200 font-medium">{selectedTracking.service || "Transport Multimodal Port-a-Porta"}</span> · Incoterm: <span className="text-pink-300 font-bold">{selectedTracking.incoterm || "CIF"}</span>
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col items-start md:items-end">
-                    <span className="text-xs text-slate-400">Estat de l'Expedició:</span>
-                    <span className="text-sm font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-500/40 mt-1">
-                      {selectedTracking.status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Ruta i Ubicació Actual */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-purple-900/70 text-xs">
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <span className="text-slate-400 block mb-1">Port / Terminal d'Origen:</span>
-                    <strong className="text-sm text-white font-semibold block">{selectedTracking.origin}</strong>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <span className="text-slate-400 block mb-1">Ubicació Actual en Temps Real:</span>
-                    <strong className="text-sm text-pink-300 font-semibold block flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-pink-400 shrink-0" />
-                      {selectedTracking.location}
-                    </strong>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <span className="text-slate-400 block mb-1">Arribada Estimada a Destí (ETA):</span>
-                    <strong className="text-sm text-white font-semibold block font-mono">{selectedTracking.eta}</strong>
-                  </div>
-                </div>
-
-                {/* Línia de progrés de 4 etapes */}
-                <div className="pt-6">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-400 mb-4">
-                    Etapes de la Cadena de Transport
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-                    <div className={`p-3 rounded-lg border ${selectedTracking.stage >= 1 ? 'bg-purple-950/70 border-pink-500/60 text-white' : 'bg-slate-950/40 border-purple-950 text-slate-500'}`}>
-                      <div className="flex items-center gap-1.5 font-bold mb-1">
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${selectedTracking.stage >= 1 ? 'text-pink-400' : 'text-slate-600'}`} />
-                        <span>1. Reserva & Booking</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">Registre telemàtic d'entrada a SheetDB.</p>
-                    </div>
-
-                    <div className={`p-3 rounded-lg border ${selectedTracking.stage >= 2 ? 'bg-purple-950/70 border-pink-500/60 text-white' : 'bg-slate-950/40 border-purple-950 text-slate-500'}`}>
-                      <div className="flex items-center gap-1.5 font-bold mb-1">
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${selectedTracking.stage >= 2 ? 'text-pink-400' : 'text-slate-600'}`} />
-                        <span>2. Despatx Duaner OEA</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">DUA d'exportació i precinte ISO 17712.</p>
-                    </div>
-
-                    <div className={`p-3 rounded-lg border ${selectedTracking.stage >= 3 ? 'bg-purple-950/70 border-pink-500/60 text-white' : 'bg-slate-950/40 border-purple-950 text-slate-500'}`}>
-                      <div className="flex items-center gap-1.5 font-bold mb-1">
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${selectedTracking.stage >= 3 ? 'text-pink-400' : 'text-slate-600'}`} />
-                        <span>3. En Trànsit Principal</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">Monitorització satel·litària contínua.</p>
-                    </div>
-
-                    <div className={`p-3 rounded-lg border ${selectedTracking.stage >= 4 ? 'bg-purple-950/70 border-pink-500/60 text-white' : 'bg-slate-950/40 border-purple-950 text-slate-500'}`}>
-                      <div className="flex items-center gap-1.5 font-bold mb-1">
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${selectedTracking.stage >= 4 ? 'text-pink-400' : 'text-slate-600'}`} />
-                        <span>4. Lliurament al Client</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">Descàrrega i signatura d'e-CMR o B/L.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Taula amb totes les expedicions disponibles a la base de dades */}
-            <div className="overflow-x-auto bg-slate-900 rounded-2xl border border-purple-900/60 shadow-xl">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="text-[11px] uppercase tracking-wider text-pink-400 bg-slate-950/80 border-b border-purple-900/80">
-                  <tr>
-                    <th className="py-3 px-4 font-bold">Codi Seguiment</th>
-                    <th className="py-3 px-4 font-bold">Client / Empresa</th>
-                    <th className="py-3 px-4 font-bold">Ruta (Origen &rarr; Destinació)</th>
-                    <th className="py-3 px-4 font-bold">Estat Operatiu</th>
-                    <th className="py-3 px-4 font-bold">Ubicació Actual</th>
-                    <th className="py-3 px-4 font-bold">ETA</th>
-                    <th className="py-3 px-4 font-bold text-right">Acció</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-purple-950">
-                  {trackingFiltrats.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className={`hover:bg-purple-950/40 transition-colors cursor-pointer ${
-                        selectedTracking?.tracking_code === item.tracking_code ? 'bg-purple-950/60' : ''
-                      }`}
-                      onClick={() => setSelectedTracking(item)}
-                    >
-                      <td className="py-3 px-4 font-mono font-bold text-pink-300 whitespace-nowrap">
-                        {item.tracking_code}
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-white">
-                        {item.client}
-                      </td>
-                      <td className="py-3 px-4">
-                        {item.origin} &rarr; {item.destination}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-950 text-slate-200 border border-purple-800 text-[11px]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-300">
-                        {item.location}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-slate-200 whitespace-nowrap">
-                        {item.eta}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTracking(item);
-                          }}
-                          className="px-3 py-1 rounded bg-purple-900/60 hover:bg-pink-600 text-white font-medium text-xs transition-colors cursor-pointer"
-                        >
-                          Rastrejar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {trackingFiltrats.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
-                        No s'ha trobat cap expedició amb aquest criteri. Proveu de cercar per <em>ATL-MAR-7410</em> o sol·liciteu un nou pressupost.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* ======================================================== */}
-        {/* 5. SECCIÓ D'EINES TÈCNIQUES I MATRIU INCOTERMS® 2020     */}
-        {/* ======================================================== */}
-        <section id="eines" className="py-24 bg-slate-900 text-slate-100 border-b border-purple-950">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mb-12">
-              <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
-                <span>Eines Tècniques per a Professionals</span>
-                <span aria-hidden="true">·</span>
-                <span>Comerç Internacional</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Matriu Incoterms® 2020 & Calculadora de Cubatge
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                Rastreador GPS de Camiones y Telemetría Clínica en Vivo
               </h2>
-              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
-                Guia operativa de transmissió de riscos, obligacions duaneres segons les regles de la Cambra de Comerç Internacional (ICC) i càlcul volumètric d'estiba.
+              <p className="mt-3 text-white/90 text-base">
+                Audita cualquier expedición terrestre de MEDICAM en España para verificar lote médico, temperatura interna de caja, vibración de suspensión y apertura de puertas.
               </p>
             </div>
 
-            {/* Pestanyes de les Eines */}
-            <div className="flex gap-3 border-b border-purple-900/60 pb-3 mb-8 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setActiveToolTab('simulador')}
-                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
-                  activeToolTab === 'simulador' ? 'bg-purple-900 text-white' : 'text-slate-400 hover:text-white'
-                }`}
+            <div className="bg-[#173E0D] rounded-2xl border border-[#84CC16]/35 p-5 sm:p-6 mb-8">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleTrackShipment();
+                }}
+                className="flex flex-col sm:flex-row gap-3"
               >
-                <Compass className="w-4 h-4 text-pink-400" />
-                Matriu Incoterms® 2020 (Risc & Duanes)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveToolTab('cubatge')}
-                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${
-                  activeToolTab === 'cubatge' ? 'bg-purple-900 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Calculator className="w-4 h-4 text-pink-400" />
-                Calculadora Volumètrica de Càrrega
-              </button>
+                <div className="relative flex-1">
+                  <Search className="w-5 h-5 text-[#F5E626] absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    value={trackingInput}
+                    onChange={(e) => setTrackingInput(e.target.value)}
+                    placeholder="Introduce código de expedición (ej: MDC-2026-0841)..."
+                    className="w-full pl-11 pr-4 py-3 rounded-lg bg-[#215314] border border-white/25 text-white font-mono text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-[#F5E626]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={trackerLoading}
+                  className="px-6 py-3 rounded-lg bg-[#F5E626] hover:bg-[#E5D618] text-[#14360E] font-extrabold text-sm transition-colors inline-flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                >
+                  {trackerLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Consultando...
+                    </>
+                  ) : (
+                    <>
+                      Auditar Camión
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-white/85">Expediciones en ruta (España):</span>
+                {Object.keys(SHIPMENT_DATABASE).map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleTrackShipment(code)}
+                    className={`px-2.5 py-1 rounded font-mono transition-colors cursor-pointer ${
+                      activeShipment?.codigo === code
+                        ? 'bg-[#F5E626] text-[#14360E] font-extrabold'
+                        : 'bg-[#215314] text-white border border-white/25 hover:border-[#F5E626]'
+                    }`}
+                  >
+                    {code}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {activeToolTab === 'simulador' && (
-              <div className="overflow-x-auto bg-slate-950 rounded-2xl border border-purple-900/60 p-6 shadow-xl">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="text-[11px] uppercase tracking-wider text-pink-400 border-b border-purple-900/80">
-                    <tr>
-                      <th className="py-3 px-4 font-bold">Incoterm® 2020</th>
-                      <th className="py-3 px-4 font-bold">Lloc de Lliurament</th>
-                      <th className="py-3 px-4 font-bold">Transmissió del Risc</th>
-                      <th className="py-3 px-4 font-bold">Flet Internacional</th>
-                      <th className="py-3 px-4 font-bold">Despatx Duaner</th>
-                      <th className="py-3 px-4 font-bold">Aplicabilitat</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-purple-950">
-                    <tr className="hover:bg-purple-950/40">
-                      <td className="py-3.5 px-4 font-bold text-white font-mono">EXW (Ex Works)</td>
-                      <td className="py-3.5 px-4">Instal·lacions del venedor</td>
-                      <td className="py-3.5 px-4 text-amber-300">En posar mercaderia a disposició</td>
-                      <td className="py-3.5 px-4 text-slate-400">Comprador</td>
-                      <td className="py-3.5 px-4 text-slate-400">Comprador (Exp i Imp)</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-200">Multimodal</td>
-                    </tr>
-                    <tr className="hover:bg-purple-950/40">
-                      <td className="py-3.5 px-4 font-bold text-white font-mono">FOB (Free On Board)</td>
-                      <td className="py-3.5 px-4">A bord del vaixell al port de càrrega</td>
-                      <td className="py-3.5 px-4 text-emerald-300">Un cop a bord del vaixell</td>
-                      <td className="py-3.5 px-4 text-slate-400">Comprador</td>
-                      <td className="py-3.5 px-4 text-fuchsia-300">Venedor (DUA Exp) / Comprador (Imp)</td>
-                      <td className="py-3.5 px-4 font-semibold text-pink-400">Marítim Exclusiu</td>
-                    </tr>
-                    <tr className="hover:bg-purple-950/40 bg-purple-950/20">
-                      <td className="py-3.5 px-4 font-bold text-white font-mono">CIF (Cost, Insurance, Freight)</td>
-                      <td className="py-3.5 px-4">A bord del vaixell (Port d'origen)</td>
-                      <td className="py-3.5 px-4 text-emerald-300">A bord del vaixell a origen</td>
-                      <td className="py-3.5 px-4 text-pink-300">Venedor (paga flet i pòlissa)</td>
-                      <td className="py-3.5 px-4 text-fuchsia-300">Venedor (DUA Exp) / Comprador (Imp)</td>
-                      <td className="py-3.5 px-4 font-semibold text-pink-400">Marítim FCL / LCL</td>
-                    </tr>
-                    <tr className="hover:bg-purple-950/40">
-                      <td className="py-3.5 px-4 font-bold text-white font-mono">DAP (Delivered at Place)</td>
-                      <td className="py-3.5 px-4">Lloc convingut de destinació</td>
-                      <td className="py-3.5 px-4 text-pink-300">En arribar al destí sense descarregar</td>
-                      <td className="py-3.5 px-4 text-pink-300">Venedor</td>
-                      <td className="py-3.5 px-4 text-slate-300">Venedor (Exp) / Comprador (Imp)</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-200">Carretera FTL / Multimodal</td>
-                    </tr>
-                    <tr className="hover:bg-purple-950/40">
-                      <td className="py-3.5 px-4 font-bold text-white font-mono">DDP (Delivered Duty Paid)</td>
-                      <td className="py-3.5 px-4">Magatzem del client amb aranzels pagats</td>
-                      <td className="py-3.5 px-4 text-pink-300">A la recepció de destí</td>
-                      <td className="py-3.5 px-4 text-pink-300">Venedor (Tot inclòs)</td>
-                      <td className="py-3.5 px-4 text-pink-300">Venedor (Tots els aranzels i IVA)</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-200">Tots els modes</td>
-                    </tr>
-                  </tbody>
-                </table>
+            {trackerError && (
+              <div className="p-4 rounded-xl bg-red-950/75 border border-red-400/60 text-red-100 flex items-center gap-3 text-sm mb-8">
+                <AlertTriangle className="w-5 h-5 text-red-300 shrink-0" />
+                <span>{trackerError}</span>
               </div>
             )}
 
-            {activeToolTab === 'cubatge' && (
-              <div className="bg-slate-950 rounded-2xl border border-purple-900/60 p-6 sm:p-8 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div className="space-y-4 text-xs">
-                  <h3 className="text-base font-bold text-white">Calculadora Ràpida d'Estiba i Volum (m³)</h3>
-                  <p className="text-slate-400 leading-relaxed">
-                    Ajusteu el nombre de palets i alçada per calcular la capacitat cúbica necessària i saber si l'expedició requereix un contenidor High Cube o un tràiler FTL.
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-slate-300 font-medium mb-1">Nombre de Palets:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="66"
-                        value={calcPalets}
-                        onChange={(e) => setCalcPalets(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-purple-800 text-white font-mono text-sm focus:ring-2 focus:ring-pink-500 outline-hidden"
-                      />
+            {activeShipment && (
+              <div className="bg-white text-[#14360E] rounded-2xl border border-[#2E741B]/25 p-6 sm:p-8 space-y-8 shadow-xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-slate-500">
+                      <span>{activeShipment.unidad}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{activeShipment.equipoFrio}</span>
                     </div>
-                    <div>
-                      <label className="block text-slate-300 font-medium mb-1">Tipus de Palet:</label>
-                      <select
-                        value={calcTipus}
-                        onChange={(e) => setCalcTipus(e.target.value as 'euro' | 'iso')}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-purple-800 text-white font-medium text-xs focus:ring-2 focus:ring-pink-500 outline-hidden"
-                      >
-                        <option value="euro">Europalet (1.200 × 800 mm)</option>
-                        <option value="iso">Americà / ISO (1.200 × 1.000 mm)</option>
-                      </select>
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
+                      <h3 className="text-2xl font-mono font-bold text-[#14360E]">
+                        {activeShipment.codigo}
+                      </h3>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2E741B]">
+                        <CheckCircle2 className="w-4 h-4" />
+                        {activeShipment.estado} ({activeShipment.progreso} %)
+                      </span>
                     </div>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {activeShipment.producto} · <span className="font-mono font-semibold text-[#2E741B]">{activeShipment.loteClinico}</span> · {activeShipment.rangoObjetivo}
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1">Alçada de la càrrega paletitzada (metres): {calcAlcada} m</label>
-                    <input
-                      type="range"
-                      min="0.8"
-                      max="2.5"
-                      step="0.1"
-                      value={calcAlcada}
-                      onChange={(e) => setCalcAlcada(parseFloat(e.target.value))}
-                      className="w-full accent-pink-500 cursor-pointer"
+                  <div className="md:text-right">
+                    <span className="text-xs text-slate-500 block">ETA / Llegada a Hospital</span>
+                    <span className="text-base font-mono font-bold text-[#14360E]">
+                      {activeShipment.eta}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
+                    <span>{activeShipment.origen}</span>
+                    <span>{activeShipment.destino}</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-[#F4F7F2] rounded-full overflow-hidden border border-[#2E741B]/20">
+                    <div
+                      className="h-full bg-[#2E741B] transition-all duration-500"
+                      style={{ width: `${activeShipment.progreso}%` }}
                     />
                   </div>
                 </div>
 
-                {/* Caixa de Resultat de Cubatge */}
-                <div className="p-6 rounded-xl bg-purple-950/60 border border-purple-800/80 space-y-4">
-                  <div>
-                    <span className="text-xs text-slate-400 block">Volum total calculat:</span>
-                    <span className="text-3xl font-extrabold text-pink-300 font-mono">{volumTotalEstimats} m³ (CBM)</span>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="p-4 rounded-lg bg-[#F4F7F2] border border-[#2E741B]/15">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                      <HeartPulse className="w-3.5 h-3.5 text-[#2E741B]" />
+                      Temp. Caja
+                    </div>
+                    <div className="text-xl font-mono font-bold text-[#14360E] mt-1">
+                      {activeShipment.sensores.tempActual}
+                    </div>
                   </div>
 
-                  <div className="pt-3 border-t border-purple-900/80">
-                    <span className="text-xs text-slate-400 block">Unitat de transport recomanada:</span>
-                    <strong className="text-sm font-bold text-white block mt-0.5">{equipRecomanat}</strong>
+                  <div className="p-4 rounded-lg bg-[#F4F7F2] border border-[#2E741B]/15">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                      <Activity className="w-3.5 h-3.5 text-[#2E741B]" />
+                      Vibración Eje
+                    </div>
+                    <div className="text-sm font-mono font-bold text-[#14360E] mt-1.5">
+                      {activeShipment.sensores.vibracionG}
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        observacions: `Càlcul de cubatge: ${calcPalets} palets (${calcTipus === 'euro' ? 'Europalet' : 'ISO'}), alçada ${calcAlcada}m. Volum estimat: ${volumTotalEstimats} m³. Recomanació: ${equipRecomanat}.`,
-                      }));
-                      const element = document.getElementById('contacte');
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
-                    className="w-full py-2.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                  >
-                    Traslladar càlcul de volum al formulari
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="p-4 rounded-lg bg-[#F4F7F2] border border-[#2E741B]/15">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                      <ShieldPlus className="w-3.5 h-3.5 text-[#2E741B]" />
+                      Puertas Traseras
+                    </div>
+                    <div className="text-sm font-mono font-bold text-[#2E741B] mt-1.5">
+                      {activeShipment.sensores.aperturaPuerta}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-[#F4F7F2] border border-[#2E741B]/15">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                      <BatteryCharging className="w-3.5 h-3.5 text-[#2E741B]" />
+                      Autonomía Frío
+                    </div>
+                    <div className="text-sm font-mono font-bold text-[#14360E] mt-1.5">
+                      {activeShipment.sensores.combustibleReserva}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-[#F4F7F2] border border-[#2E741B]/15 col-span-2 lg:col-span-1">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                      <FlaskConical className="w-3.5 h-3.5 text-[#2E741B]" />
+                      Humedad
+                    </div>
+                    <div className="text-lg font-mono font-bold text-[#14360E] mt-1">
+                      {activeShipment.sensores.humedad}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4 border-t border-slate-200">
+                  <div className="lg:col-span-7">
+                    <h4 className="text-sm font-bold text-[#14360E] mb-3">
+                      Registro Lineal de Estabilidad Térmica (EN 12830)
+                    </h4>
+                    <ThermalStabilityChart
+                      points={activeShipment.curvaTermica}
+                      targetMin={activeShipment.targetMin}
+                      targetMax={activeShipment.targetMax}
+                    />
+                  </div>
+
+                  <div className="lg:col-span-5">
+                    <h4 className="text-sm font-bold text-[#14360E] mb-3">
+                      Bitácora de Ruta y Cadena de Custodia
+                    </h4>
+                    <div className="space-y-4">
+                      {activeShipment.hitos.map((hito) => (
+                        <div key={hito.hora + hito.titulo} className="flex items-start gap-3 text-xs">
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${
+                              hito.completado ? 'bg-[#2E741B]' : 'bg-slate-300'
+                            }`}
+                          />
+                          <div>
+                            <div className="font-mono text-slate-500">{hito.hora}</div>
+                            <div className="font-bold text-[#14360E] text-sm">{hito.titulo}</div>
+                            <p className="text-slate-600 mt-0.5 leading-relaxed">{hito.detalle}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </section>
 
-        {/* ======================================================== */}
-        {/* 6. SECCIÓ QUI SOM: PLATAFORMA OPERATIVA I CERTIFICACIONS */}
-        {/* ======================================================== */}
-        <section id="quisom" className="py-24 bg-slate-900 text-slate-100 border-t border-purple-950">
+        {/* ===================================================================== */}
+        {/* CALCULADORA DE COTIZACIÓN EN CAMIÓN FRIGORÍFICO (ESPAÑA)              */}
+        {/* ===================================================================== */}
+        <section id="cotizador" className="py-20 bg-[#F4F7F2] border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-6 space-y-6">
-                <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider">
-                  <span>Operador Logístic Integral</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Barcelona Hub ZAL</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+              <div className="lg:col-span-7 bg-white rounded-2xl border border-[#2E741B]/20 p-6 sm:p-8">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#2E741B] uppercase tracking-wider mb-2">
+                  <Calculator className="w-4 h-4" />
+                  Cotizador Terrestre en Tiempo Real
                 </div>
-
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                  Infraestructura portuària i gestió duanera d'alta precisió.
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#14360E]">
+                  Calculadora de Transporte en Camión Farmacéutico
                 </h2>
-
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Des de la nostra seu central al Moll Sud del Port de Barcelona i la plataforma ZAL Prat, connectem els principals corredors mundials combinant flexibilitat terrestre amb el gran tonatge de les rutes transoceàniques.
+                <p className="text-sm text-slate-600 mt-2 mb-6">
+                  Calcula al instante la tarifa estimada y tiempo de tránsito por carretera en España según número de Euro-palés, peso, rango térmico y modalidad de camión.
                 </p>
 
-                <div className="grid grid-cols-2 gap-4 text-xs pt-2">
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <strong className="text-lg font-bold text-pink-400 block font-mono">45.000 m²</strong>
-                    <span className="text-slate-400">Nau d'alta rotació amb 42 molls electrohidràulics.</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <strong className="text-lg font-bold text-white block font-mono">ES-OEA-004128</strong>
-                    <span className="text-slate-400">Certificat OEA-F de duanes i seguretat europea.</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <strong className="text-lg font-bold text-fuchsia-300 block font-mono">120+ Caps</strong>
-                    <span className="text-slate-400">Flota pròpia Euro 6e amb termògraf SLXi 24/7.</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-950 border border-purple-900/60">
-                    <strong className="text-lg font-bold text-emerald-400 block font-mono">IFS & GDP</strong>
-                    <span className="text-slate-400">Homologació per a farmacèutica i agroalimentació.</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-6 relative">
-                <div className="aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden shadow-2xl border border-purple-800/80 bg-purple-950">
-                  <img
-                    src="/images/port-quisom.jpg"
-                    alt="Grues portuàries Ship-to-Shore i moll de càrrega comercial"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      if (!target.dataset.triedFallback) {
-                        target.dataset.triedFallback = 'true';
-                        target.src = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80';
-                      }
-                    }}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ======================================================== */}
-        {/* 7. BLOG LOGÍSTIC: ANÀLISI I CRITERIS TÈCNICS             */}
-        {/* ======================================================== */}
-        <section id="blog" className="py-24 bg-slate-950 text-slate-100 border-t border-purple-950">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mb-12">
-              <div className="flex items-center gap-2 text-xs font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
-                <span>Publicacions & Anàlisi Tècnica</span>
-                <span aria-hidden="true">·</span>
-                <span>Actualitat Logística</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Coneixement Tècnic de Transport i Comerç Exterior
-              </h2>
-              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
-                Articles formatius redactats des de la perspectiva de la gestió del transport internacional i operacions de despatx duaner.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <article className="p-6 rounded-2xl border border-purple-900/60 bg-slate-900/80 hover:border-pink-500/60 transition-all flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
-                    <span className="text-fuchsia-400 font-semibold">Cadena de Fred</span>
-                    <span aria-hidden="true">·</span>
-                    <span>Lectura: 5 min</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
-                    Normativa ATP Classe FRC i telemetria en trànsits internacionals
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Comprovació del coeficient K d'aïllament isotèrmic i registre obligatori de temperatures segons la norma EN 12830 per a peribles.
-                  </p>
-                </div>
-                <div className="pt-4 mt-4 border-t border-purple-900/50">
-                  <span className="text-xs font-semibold text-pink-400 inline-flex items-center gap-1">
-                    Llegir anàlisi tècnica <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </article>
-
-              <article className="p-6 rounded-2xl border border-purple-900/60 bg-slate-900/80 hover:border-pink-500/60 transition-all flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
-                    <span className="text-fuchsia-400 font-semibold">Comerç Marítim</span>
-                    <span aria-hidden="true">·</span>
-                    <span>Lectura: 6 min</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
-                    Optimització de rutes en terminals de contenidors del Mediterrani
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Estratègies per evitar despeses d'ocupació i demora (demurrage & detention) aprofitant corredors ferroviaris i dipòsits duaners públics DA.
-                  </p>
-                </div>
-                <div className="pt-4 mt-4 border-t border-purple-900/50">
-                  <span className="text-xs font-semibold text-pink-400 inline-flex items-center gap-1">
-                    Llegir anàlisi tècnica <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </article>
-
-              <article className="p-6 rounded-2xl border border-purple-900/60 bg-slate-900/80 hover:border-pink-500/60 transition-all flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
-                    <span className="text-fuchsia-400 font-semibold">Duanes & OEA</span>
-                    <span aria-hidden="true">·</span>
-                    <span>Lectura: 4 min</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
-                    Despatx duaner simplificat i assignació de circuit verd amb estatus OEA
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Procediments d'enllaç telemàtic amb l'Agència Tributària, garantia global de deute duaner i gestió de mercaderies sota DUA.
-                  </p>
-                </div>
-                <div className="pt-4 mt-4 border-t border-purple-900/50">
-                  <span className="text-xs font-semibold text-pink-400 inline-flex items-center gap-1">
-                    Llegir anàlisi tècnica <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        {/* ======================================================== */}
-        {/* 8. SECCIÓ CONTACTE & FORMULARI (FORMSPREE + SHEETDB)     */}
-        {/* ======================================================== */}
-        <section id="contacte" className="py-24 bg-slate-900 text-slate-100 border-t border-purple-950">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-              
-              {/* Dades de Contacte Físiques */}
-              <div className="lg:col-span-5 space-y-8">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-2 block">
-                    Canal Directe d'Operacions
-                  </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                    Coordina la teva operació logística
-                  </h2>
-                  <p className="mt-3 text-slate-400 text-sm leading-relaxed">
-                    El nostre equip calcularà la teva cotització segons volum, pes brut, distància i requeriments específics de manipulació.
-                  </p>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Adreça Física */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
-                      <MapPin className="w-5 h-5" />
-                    </div>
+                <form onSubmit={handleQuoteSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-white">Seu Operativa i Terminal Portuària</h4>
-                      <p className="text-xs text-slate-300 mt-0.5">
-                        Carrer del Port, Moll Sud, Nau 14-B<br />
-                        08040 Barcelona, Catalunya, Espanya
-                      </p>
-                      <span className="text-[11px] text-fuchsia-400 font-mono mt-0.5 inline-block">
-                        Coordenades GPS: 41.3486° N, 2.1465° E
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Telèfons */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
-                      <Phone className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white">Centraleta Directa</h4>
-                      <p className="text-xs text-slate-300 mt-0.5 font-mono">
-                        +34 932 45 88 00 (Oficines i Despatx de Duanes)
-                      </p>
-                      <p className="text-xs text-pink-400 font-mono mt-0.5">
-                        Urgències de Càrrega i Trànsit: +34 900 10 20 30 (24h)
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Correu Acadèmic Exclusiu */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white">Bústia Directa de Cotitzacions</h4>
-                      <a
-                        href="mailto:adam043@vidalibarraquer.net?subject=Sol%C2%B7licitud%20de%20Pressupost%20-%20Adam%20Transport"
-                        className="text-sm text-pink-400 font-mono font-bold hover:underline block mt-0.5"
-                      >
-                        adam043@vidalibarraquer.net
-                      </a>
-                      <span className="text-[11px] text-slate-400 block mt-0.5">
-                        (Bústia directa per a cotitzacions i consultes logístiques)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Horaris */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-purple-800 flex items-center justify-center text-pink-400 shrink-0">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white">Horaris d'Atenció i Despatx</h4>
-                      <p className="text-xs text-slate-300 mt-0.5">
-                        Dilluns a Divendres: 08:00h - 19:30h (Duanes & Gestió)
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Molls de recepció i trànsit marítim operatius 24/7
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Formulari Interactiu de Cotització amb SheetDB + Formspree */}
-              <div className="lg:col-span-7 bg-slate-950 rounded-2xl shadow-2xl border border-purple-900/80 p-8 sm:p-10">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-2xl font-bold text-white">
-                    Sol·licitud de Pressupost i Serveis
-                  </h3>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-[11px] font-mono text-emerald-300">
-                    <Database className="w-3 h-3 text-emerald-400" />
-                    SheetDB Actiu
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-                  Omple les dades de la teva expedició. Es desarà en temps real a la base de dades <strong>SheetDB (fst1vl3p3sehx)</strong> i s'enviarà simultàniament a <strong>adam043@vidalibarraquer.net</strong> via Formspree.
-                </p>
-
-                {formSubmitted ? (
-                  <div className="bg-purple-950/70 border border-pink-500/50 rounded-xl p-6 text-center animate-fadeIn space-y-4">
-                    <CheckCircle2 className="w-12 h-12 text-pink-400 mx-auto" />
-                    <div>
-                      <h4 className="text-lg font-bold text-white mb-1">
-                        Sol·licitud Registrada a SheetDB i Notificada!
-                      </h4>
-                      <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
-                        S'ha generat el codi de seguiment oficial <strong className="text-pink-400 font-mono">#{lastCreatedCode}</strong> per a l'empresa <strong>{formData.empresa || 'la teva entitat'}</strong> i s'ha desat a la base de dades.
-                      </p>
-                      <div className="mt-2 inline-block bg-slate-900 px-3.5 py-1.5 rounded-lg border border-pink-500/50 text-pink-300 font-mono text-xs font-bold">
-                        adam043@vidalibarraquer.net
-                      </div>
-                    </div>
-
-                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                      <a
-                        href="#tracking"
-                        onClick={() => {
-                          setTrackingQuery(lastCreatedCode);
-                        }}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center justify-center gap-2 shadow-md cursor-pointer"
-                      >
-                        <Database className="w-4 h-4" />
-                        Veure expedient a SheetDB (#{lastCreatedCode})
-                      </a>
-                      {lastMailtoUrl && (
-                        <a
-                          href={lastMailtoUrl}
-                          className="w-full sm:w-auto px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2 border border-purple-800"
-                        >
-                          <Mail className="w-4 h-4" />
-                          Obrir còpia en correu
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormSubmitted(false);
-                          setFormData({
-                            nom: '',
-                            empresa: '',
-                            correu: '',
-                            telefon: '',
-                            servei: 'ATL-FCL-40HC-INT',
-                            origen: '',
-                            desti: '',
-                            volum: '',
-                            observacions: '',
-                            incoterm: 'CIF',
-                          });
-                        }}
-                        className="w-full sm:w-auto px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-purple-900"
-                      >
-                        Nova sol·licitud
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="nom"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Nom i Cognoms *
-                        </label>
-                        <input
-                          type="text"
-                          id="nom"
-                          name="nom"
-                          required
-                          value={formData.nom}
-                          onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                          placeholder="Ex. Marc Soler"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="empresa"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Empresa o Raó Social *
-                        </label>
-                        <input
-                          type="text"
-                          id="empresa"
-                          name="empresa"
-                          required
-                          value={formData.empresa}
-                          onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
-                          placeholder="Ex. AgroExport Ibèrica S.L."
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="correu"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Correu de Contacte *
-                        </label>
-                        <input
-                          type="email"
-                          id="correu"
-                          name="correu"
-                          required
-                          value={formData.correu}
-                          onChange={(e) => setFormData({ ...formData, correu: e.target.value })}
-                          placeholder="client@empresa.com"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="telefon"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Telèfon *
-                        </label>
-                        <input
-                          type="tel"
-                          id="telefon"
-                          name="telefon"
-                          required
-                          value={formData.telefon}
-                          onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-                          placeholder="+34 600 000 000"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="servei"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Producte Logístic *
-                        </label>
-                        <select
-                          id="servei"
-                          name="servei"
-                          value={formData.servei}
-                          onChange={(e) => setFormData({ ...formData, servei: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all"
-                        >
-                          <option value="ATL-FCL-40HC-INT">
-                            [ATL-FCL-40HC-INT] Fletament Marítim FCL Contenidor 40' High Cube
-                          </option>
-                          <option value="ATL-REEF-EU33-ATP">
-                            [ATL-REEF-EU33-ATP] Transport Terrestre Frigorífic FTL (ATP FRC)
-                          </option>
-                          <option value="ATL-WMS-HUB45-LOG">
-                            [ATL-WMS-HUB45-LOG] Magatzem Regulador WMS ZAL (45.000 m²)
-                          </option>
-                          <option value="MULTIMODAL-INTEGRAL">
-                            Solució Multimodal Combinada Port + Carretera + Dipòsit Duaner
-                          </option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="incoterm"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Incoterm® 2020 Preferit
-                        </label>
-                        <select
-                          id="incoterm"
-                          name="incoterm"
-                          value={formData.incoterm}
-                          onChange={(e) => setFormData({ ...formData, incoterm: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all font-mono"
-                        >
-                          <option value="CIF">CIF - Cost, Insurance and Freight</option>
-                          <option value="FOB">FOB - Free On Board</option>
-                          <option value="DAP">DAP - Delivered at Place</option>
-                          <option value="DDP">DDP - Delivered Duty Paid</option>
-                          <option value="CFR">CFR - Cost and Freight</option>
-                          <option value="EXW">EXW - Ex Works</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="origen"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Punt d'Origen / Port
-                        </label>
-                        <input
-                          type="text"
-                          id="origen"
-                          name="origen"
-                          value={formData.origen}
-                          onChange={(e) => setFormData({ ...formData, origen: e.target.value })}
-                          placeholder="Ex. Port de Barcelona / Lleida"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="desti"
-                          className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                        >
-                          Punt de Destinació / País
-                        </label>
-                        <input
-                          type="text"
-                          id="desti"
-                          name="desti"
-                          value={formData.desti}
-                          onChange={(e) => setFormData({ ...formData, desti: e.target.value })}
-                          placeholder="Ex. Rotterdam / Hamburg / Xangai"
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all placeholder:text-slate-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="observacions"
-                        className="block text-xs font-semibold uppercase text-slate-300 tracking-wider mb-1.5"
-                      >
-                        Descripció de la Càrrega i Requeriments Tècnics *
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Base / Ciudad de Origen (España)
                       </label>
-                      <textarea
-                        id="observacions"
-                        name="observacions"
-                        rows={3}
-                        required
-                        value={formData.observacions}
-                        onChange={(e) => setFormData({ ...formData, observacions: e.target.value })}
-                        placeholder="Indica volum (m³), pes brut (kg), nombre de palets, codi aranzelari TARIC si es coneix, consigna de temperatura (ºC) o data prevista d'embarcament..."
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-purple-900 bg-slate-900 text-white text-sm focus:ring-2 focus:ring-pink-500 outline-hidden transition-all resize-none placeholder:text-slate-500"
+                      <select
+                        value={quoteOrigin}
+                        onChange={(e) => setQuoteOrigin(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      >
+                        <option>BCN · Barcelona (ZAL Pharma)</option>
+                        <option>MAD · Madrid (Hub Central)</option>
+                        <option>VLC · Valencia (Ribarroja)</option>
+                        <option>BIO · Bilbao (Corredor Norte)</option>
+                        <option>SVQ · Sevilla (Plataforma Sur)</option>
+                        <option>ZAZ · Zaragoza (PLAZA A-2)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Ciudad / Hospital de Destino (España)
+                      </label>
+                      <select
+                        value={quoteDest}
+                        onChange={(e) => setQuoteDest(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      >
+                        <option>MAD · Madrid (Hub Central)</option>
+                        <option>BCN · Barcelona (ZAL Pharma)</option>
+                        <option>VLC · Valencia (Ribarroja)</option>
+                        <option>SVQ · Sevilla (Plataforma Sur)</option>
+                        <option>BIO · Bilbao (Corredor Norte)</option>
+                        <option>ZAZ · Zaragoza (PLAZA A-2)</option>
+                        <option>SCQ · Santiago / A Coruña (Galicia)</option>
+                        <option>PMI · Palma de Mallorca (Ro-Ro 380V)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Peso Bruto de la Carga (kg)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={24000}
+                        value={quoteWeight}
+                        onChange={(e) => setQuoteWeight(Math.max(1, Number(e.target.value)))}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-mono text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <button
-                        type="submit"
-                        disabled={formLoading}
-                        className="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-sm shadow-xl shadow-fuchsia-950/40 transition-all focus:ring-4 focus:ring-pink-500/30 disabled:opacity-75 cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        {formLoading ? (
-                          <>
-                            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                            Desant a SheetDB i notificant a adam043@vidalibarraquer.net...
-                          </>
-                        ) : (
-                          'Sol·licitar Cotització i Desar a SheetDB'
-                        )}
-                      </button>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Euro-palés Farmacéuticos (1 - 33)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={33}
+                        value={quotePallets}
+                        onChange={(e) => setQuotePallets(Math.min(33, Math.max(1, Number(e.target.value))))}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-mono text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      />
                     </div>
-                  </form>
-                )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Rango Térmico Requerido
+                      </label>
+                      <select
+                        value={quoteTemp}
+                        onChange={(e) => setQuoteTemp(e.target.value as ColdRangeSpec['id'])}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      >
+                        {COLD_RANGES.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.nombre} ({r.rango})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Tipo de Vehículo y Servicio
+                      </label>
+                      <select
+                        value={quoteUrgency}
+                        onChange={(e) => setQuoteUrgency(e.target.value as typeof quoteUrgency)}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      >
+                        <option value="consolidado">Grupaje Refrigerado GDP (24h)</option>
+                        <option value="directo">Camión Directo Dedicado (Mismo Día)</option>
+                        <option value="furgon_urgente">Furgón Clínico Express (Puerta a Farmacia)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                    <div>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Laboratorio / Hospital Solicitante
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={quoteCompany}
+                        onChange={(e) => setQuoteCompany(e.target.value)}
+                        placeholder="Ej. Hospital Clínic / Laboratorios S.A."
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#14360E] mb-1.5">
+                        Correo Corporativo (Respuesta desde comercial@medicam.cat)
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={quoteEmail}
+                        onChange={(e) => setQuoteEmail(e.target.value)}
+                        placeholder="farmacia@hospital.es"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-[#14360E] focus:ring-2 focus:ring-[#2E741B] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {quoteConfirmedCode && (
+                    <div className="p-4 rounded-lg bg-[#2E741B]/10 border border-[#2E741B]/35 text-[#14360E] text-xs space-y-1">
+                      <div className="font-bold flex items-center gap-1.5 text-sm text-[#2E741B]">
+                        <CheckCircle2 className="w-4 h-4 text-[#2E741B]" />
+                        Reserva de camión registrada ({quoteConfirmedCode})
+                      </div>
+                      <p>
+                        La solicitud se ha enviado a <strong>comercial@medicam.cat</strong> (y respaldo académico) y ha quedado disponible en el rastreador de flota.
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={quoteSubmitting}
+                    className="w-full py-3.5 px-6 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white font-bold text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    {quoteSubmitting ? 'Transmitiendo orden a comercial@medicam.cat...' : 'Confirmar Cotización y Reservar Camión'}
+                    <ArrowRight className="w-4 h-4 text-[#F5E626]" />
+                  </button>
+                </form>
+              </div>
+
+              <div className="lg:col-span-5 bg-[#173E0D] text-white rounded-2xl p-6 sm:p-8 border border-[#2E741B] space-y-6">
+                <div>
+                  <span className="text-xs font-mono text-[#F5E626] uppercase tracking-wider font-bold">
+                    Estimación Operativa por Carretera
+                  </span>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-4xl sm:text-5xl font-mono font-bold text-white">
+                      {estimatedCost.toLocaleString('es-ES')}
+                    </span>
+                    <span className="text-lg font-mono text-[#F5E626] font-bold">EUR</span>
+                  </div>
+                  <p className="text-xs text-white/80 mt-1">
+                    Tarifa estimada todo incluido en España (porte en camión ATP FRC, peajes, telemetría GPS y certificado EN 12830).
+                  </p>
+                </div>
+
+                <div className="pt-5 border-t border-white/15 space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-white/80">Tiempo de Ruta Estimado:</span>
+                    <strong className="font-mono text-[#F5E626]">{estimatedHours} horas</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/80">Capacidad Reservada:</span>
+                    <strong className="font-mono text-white">{quotePallets} Euro-palés ({effectiveWeight} kg)</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/80">Modalidad de Camión:</span>
+                    <strong className="text-white text-right">{selectedUrgency.label}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/80">Gestión Comercial:</span>
+                    <strong className="text-[#A3E635] font-mono">comercial@medicam.cat</strong>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-[#215314] border border-white/15 text-xs text-white/90 leading-relaxed">
+                  <strong className="text-[#F5E626] block mb-1">Garantía Cero Excursiones:</strong>
+                  Todos los transportes en camión incluyen doble sonda calibrada UNE-EN 12830, bloqueo electrónico TAPA TSR-1 y certificado PDF validado por nuestra Persona Cualificada (QP).
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================================== */}
+        {/* NORMATIVA ESPAÑOLA, CALIDAD Y CONTINGENCIA EN CARRETERA               */}
+        {/* ===================================================================== */}
+        <section id="normativa" className="py-20 bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl mb-12">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-[#2E741B] uppercase tracking-wider">
+                <ShieldPlus className="w-4 h-4" />
+                Cumplimiento Sanitario en Carretera
+              </div>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[#14360E]">
+                Normativa Nacional, ATP FRC y Contingencia en Ruta
+              </h2>
+              <p className="mt-3 text-slate-600 text-base">
+                Flota auditada bajo exigencias de la AEMPS y estándares europeos de distribución terrestre para proteger cada lote médico durante todo el trayecto.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+              {REGULATIONS.map((reg) => (
+                <div key={reg.codigo} className="p-6 rounded-2xl bg-[#F4F7F2] border border-[#2E741B]/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <Award className="w-5 h-5 text-[#2E741B]" />
+                    <span className="text-xs font-mono font-bold text-[#2E741B]">Vigente</span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#14360E]">{reg.codigo}</h3>
+                  <div className="text-xs font-semibold text-slate-500 mt-1">{reg.titulo}</div>
+                  <p className="text-xs text-slate-600 mt-3 leading-relaxed">{reg.alcance}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-[#2E741B] text-white rounded-2xl p-6 sm:p-8 border border-[#225814]">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/20">
+                <div>
+                  <span className="text-xs font-mono text-[#F5E626] uppercase font-bold">
+                    Matriz de Respuesta Rápida QP España
+                  </span>
+                  <h3 className="text-xl font-bold text-white mt-1">
+                    Protocolos de Contingencia ante Olas de Calor, Cortes o Desvíos
+                  </h3>
+                </div>
+                <span className="text-xs font-mono text-[#F5E626] font-bold">
+                  SLA Asistencia en Ruta: &lt; 10 min
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                {CONTINGENCY_PROTOCOLS.map((prot) => (
+                  <div key={prot.escenario} className="bg-[#173E0D] rounded-xl p-5 border border-white/15 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{prot.escenario}</h4>
+                      <p className="text-xs text-white/85 mt-2 leading-relaxed">{prot.accion}</p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-white/15 text-xs font-mono text-[#F5E626] font-bold">
+                      {prot.sla}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
       </main>
 
-      {/* ======================================================== */}
-      {/* 9. FOOTER CORPORATIU FOSC & ENLLAÇOS LEGALS              */}
-      {/* ======================================================== */}
-      <footer className="bg-slate-950 text-slate-400 border-t border-purple-950 text-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          
-          {/* Advertència de Projecte Acadèmic */}
-          <div className="mb-8 p-4 rounded-xl bg-purple-950/50 border border-purple-800/60 text-slate-300 text-xs flex flex-col sm:flex-row items-center justify-center gap-2 text-center sm:text-left">
-            <AlertCircle className="w-5 h-5 shrink-0 text-pink-400" />
-            <span>
-              <strong>AVÍS ACADÈMIC:</strong> Aquest lloc web és un prototip educatiu desenvolupat per al Cicle Formatiu de Grau Superior en Transport i Logística / Comerç Internacional. No correspon a una societat mercantil activa.
-            </span>
-          </div>
+      {/* ===================================================================== */}
+      {/* FOOTER CORPORATIVO (DOMINIO MEDICAM.CAT + BUZONES OFICIALES)          */}
+      {/* ===================================================================== */}
+      <footer className="bg-[#173E0D] text-white/90 text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/15">
+            {/* Marca, Dominio y Estructura de Correos Profesionales */}
+            <div className="md:col-span-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <PharmacyChaliceEmblem dark />
+                <span className="text-xl font-extrabold text-white tracking-tight">MEDICAM</span>
+                <span className="text-xs font-mono text-[#F5E626] ml-1 font-bold">medicam.cat</span>
+              </div>
+              <p className="text-xs text-white/80 leading-relaxed">
+                Operador español de transporte en camión frigorífico ATP Clase FRC especializado exclusivamente en logística farmacéutica y hospitalaria en toda España.
+              </p>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-purple-900/50">
-            <div className="flex items-center gap-3">
-              <BrandLogo className="w-9 h-9" />
-              <div>
-                <span className="text-base font-black tracking-tight text-white uppercase">
-                  ADAM TRANSPORT AND LOGISTIC
-                </span>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Operador logístic integral · Transport marítim FCL · Flota frigorífica FTL · Dipòsit WMS ZAL Barcelona.
-                </p>
+              {/* Estructura de Correos Profesionales @medicam.cat */}
+              <div className="pt-2 space-y-2 text-xs font-mono bg-[#215314] p-4 rounded-xl border border-white/15">
+                <div className="text-white flex items-center justify-between gap-2">
+                  <span className="font-sans text-white/80">Atención General:</span>
+                  <a href="mailto:info@medicam.cat" className="text-[#F5E626] hover:underline">info@medicam.cat</a>
+                </div>
+                <div className="text-white flex items-center justify-between gap-2">
+                  <span className="font-sans text-white/80">Operaciones y Tráfico:</span>
+                  <a href="mailto:operacions@medicam.cat" className="text-[#F5E626] hover:underline">operacions@medicam.cat</a>
+                </div>
+                <div className="text-white flex items-center justify-between gap-2">
+                  <span className="font-sans text-white/80">Cotizaciones y Ventas:</span>
+                  <a href="mailto:comercial@medicam.cat" className="text-[#A3E635] hover:underline">comercial@medicam.cat</a>
+                </div>
+                <div className="pt-2 border-t border-white/15 flex items-center justify-between gap-2">
+                  <span className="font-sans text-white/80">Teléfono Central:</span>
+                  <strong className="text-white">+34 932 45 88 00</strong>
+                </div>
               </div>
             </div>
 
-            {/* Enllaços Legals (Modals Interactius) */}
-            <div className="flex flex-wrap gap-5 text-xs text-slate-300">
-              <button
-                type="button"
-                onClick={() => setLegalModal('avis')}
-                className="hover:text-pink-400 transition-colors cursor-pointer"
-              >
-                Avís Legal
-              </button>
-              <button
-                type="button"
-                onClick={() => setLegalModal('privacitat')}
-                className="hover:text-pink-400 transition-colors cursor-pointer"
-              >
-                Política de Privacitat
-              </button>
-              <button
-                type="button"
-                onClick={() => setLegalModal('cookies')}
-                className="hover:text-pink-400 transition-colors cursor-pointer"
-              >
-                Política de Cookies
-              </button>
-              <button
-                type="button"
-                onClick={() => setLegalModal('condicions')}
-                className="hover:text-pink-400 transition-colors cursor-pointer"
-              >
-                Condicions Generals de Transport
-              </button>
+            {/* Red de Corredores Terrestres en España */}
+            <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {HUB_NETWORK.map((hub) => (
+                <div key={hub.region}>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-2 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#F5E626]" />
+                    {hub.region}
+                  </h4>
+                  <p className="text-xs font-mono text-[#F5E626] mb-1.5">{hub.ciudades}</p>
+                  <p className="text-xs text-white/80 leading-relaxed">{hub.detalle}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Data d'avui i connexió SheetDB al peu de pàgina */}
-          <div className="py-3 my-6 px-4 rounded-xl bg-slate-900/60 border border-purple-900/40 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
-            <span className="text-slate-300 font-medium">
-              Data d'avui: <strong className="text-white font-semibold">12 de novembre de 2026</strong>
-            </span>
-            <span className="text-pink-300 flex items-center gap-1.5 font-mono text-[11px]">
-              <Database className="w-3.5 h-3.5 text-pink-400" />
-              Base de dades en directe: SheetDB (fst1vl3p3sehx)
-            </span>
-          </div>
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/75">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>&copy; 2026 MEDICAM (medicam.cat).</span>
+              <span aria-hidden="true">·</span>
+              <strong className="text-[#F5E626]">{t.academicNotice}</strong>
+              <span aria-hidden="true">·</span>
+              <span>Transporte Farmacéutico España · ATP FRC · AEMPS · EU GDP</span>
+            </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-            <p>&copy; 2026 ADAM TRANSPORT AND LOGISTIC. Tots els drets reservats.</p>
-            <p>Fotografies autoritzades del sector marítim i logístic.</p>
+            <div className="flex flex-wrap items-center gap-5">
+              <button type="button" onClick={() => setLegalModal('gdp')} className="hover:text-[#F5E626] transition-colors cursor-pointer">
+                Manual Calidad GDP
+              </button>
+              <button type="button" onClick={() => setLegalModal('atp')} className="hover:text-[#F5E626] transition-colors cursor-pointer">
+                Condiciones Transporte ATP FRC
+              </button>
+              <button type="button" onClick={() => setLegalModal('privacidad')} className="hover:text-[#F5E626] transition-colors cursor-pointer">
+                Privacidad y EN 12830
+              </button>
+            </div>
           </div>
         </div>
       </footer>
 
-      {/* ======================================================== */}
-      {/* MODAL 1: FITXA TÈCNICA COMPLETA DEL PRODUCTE             */}
-      {/* ======================================================== */}
-      {selectedProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-purple-800 text-slate-100">
-            <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md px-6 py-4 border-b border-purple-800 flex items-center justify-between z-10">
-              <div>
-                <span className="text-[11px] font-mono font-bold text-pink-300 bg-purple-950 px-2.5 py-0.5 rounded border border-pink-500/40">
-                  {selectedProduct.refInterna}
-                </span>
-                <h3 className="text-lg font-bold text-white mt-1">
-                  Fitxa Tècnica i Paràmetres d'Enginyeria Logística
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedProduct(null)}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="relative h-48 rounded-xl overflow-hidden border border-purple-800">
-                <img
-                  src={selectedProduct.imatge}
-                  alt={selectedProduct.nomTecnic}
-                  decoding="async"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.dataset.triedFallback && selectedProduct.fallbackImatge) {
-                      target.dataset.triedFallback = 'true';
-                      target.src = selectedProduct.fallbackImatge;
-                    }
-                  }}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-4">
-                  <p className="text-white font-bold text-base">{selectedProduct.nomTecnic}</p>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-pink-400 mb-2">
-                  Definició Operativa i Abast del Servei
-                </h4>
-                <p className="text-sm text-slate-300 leading-relaxed bg-slate-950 p-4 rounded-xl border border-purple-900/70">
-                  {selectedProduct.descripcioCompleta}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-pink-400 mb-3">
-                  Especificacions Tècniques de Comerç Internacional & Transport
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
-                    <span className="text-slate-400 block font-medium">Codi Tècnic Oficial & TARIC</span>
-                    <span className="font-mono font-semibold text-pink-300">{selectedProduct.codiTecnic}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
-                    <span className="text-slate-400 block font-medium">Marc Normatiu & Homologació</span>
-                    <span className="font-semibold text-white">{selectedProduct.normativa}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
-                    <span className="text-slate-400 block font-medium">Dimensions Interiors i Pas</span>
-                    <span className="font-semibold text-white">{selectedProduct.especificacions.dimensions}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
-                    <span className="text-slate-400 block font-medium">Volum Útil (CBM)</span>
-                    <span className="font-semibold text-pink-300">{selectedProduct.especificacions.volum}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
-                    <span className="text-slate-400 block font-medium">Balanç de Tara & Pes Brut</span>
-                    <span className="font-semibold text-white">{selectedProduct.especificacions.tara}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60">
-                    <span className="text-slate-400 block font-medium">Càrrega Màxima Útil (Payload)</span>
-                    <span className="font-semibold text-pink-300">{selectedProduct.especificacions.payload}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
-                    <span className="text-slate-400 block font-medium">Capacitat d'Estiba en Palets Normalitzats</span>
-                    <span className="font-semibold text-white">{selectedProduct.especificacions.capacitatPalets}</span>
-                  </div>
-                  {selectedProduct.especificacions.temperatura && (
-                    <div className="p-3 bg-slate-950 rounded-lg border border-pink-500/40 md:col-span-2">
-                      <span className="text-pink-300 block font-medium">Regulació Tèrmica Homologada ATP</span>
-                      <span className="font-semibold text-white">{selectedProduct.especificacions.temperatura}</span>
-                    </div>
-                  )}
-                  {selectedProduct.especificacions.incoterms && (
-                    <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
-                      <span className="text-slate-400 block font-medium">Incoterms® 2020 Suportats</span>
-                      <span className="font-semibold text-pink-300">{selectedProduct.especificacions.incoterms}</span>
-                    </div>
-                  )}
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
-                    <span className="text-slate-400 block font-medium">Documentació Exigida & Duanera</span>
-                    <span className="font-semibold text-slate-200 leading-relaxed">{selectedProduct.especificacions.documentacio}</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 rounded-lg border border-purple-900/60 md:col-span-2">
-                    <span className="text-slate-400 block font-medium">Certificacions de Qualitat i Sanitàries</span>
-                    <span className="font-semibold text-white">{selectedProduct.especificacions.certificats}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-pink-400 mb-2">
-                  Valor Afegit i Garanties Operatives
-                </h4>
-                <ul className="space-y-2 text-xs text-slate-300">
-                  {selectedProduct.avantatges.map((av, idx) => (
-                    <li key={idx} className="flex items-start gap-2 bg-slate-950 p-2.5 rounded-lg border border-purple-900/60">
-                      <CheckCircle2 className="w-4 h-4 text-pink-400 shrink-0 mt-0.5" />
-                      <span>{av}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-purple-900/80">
-                <button
-                  type="button"
-                  onClick={() => setSelectedProduct(null)}
-                  className="px-4 py-2.5 rounded-lg border border-purple-800 text-slate-300 text-xs font-semibold hover:bg-slate-800 cursor-pointer"
-                >
-                  Tancar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handlePreselectService(selectedProduct.refInterna);
-                    setSelectedProduct(null);
-                  }}
-                  className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold shadow-md cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  Demanar Cotització d'aquest Producte
-                  <ArrowRight className="w-3.5 h-3.5 text-white" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* MODAL 2: AVIS LEGAL / PRIVACITAT / COOKIES               */}
-      {/* ======================================================== */}
+      {/* Modal Legal */}
       {legalModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-purple-800 text-slate-200">
-            <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md px-6 py-4 border-b border-purple-800 flex items-center justify-between z-10">
-              <h3 className="text-base font-bold text-white">
-                {legalModal === 'avis' && 'Avís Legal i Dades Identificatives'}
-                {legalModal === 'privacitat' && 'Política de Privacitat i Protecció de Dades (RGPD)'}
-                {legalModal === 'cookies' && 'Política de Cookies i Traçabilitat'}
-                {legalModal === 'condicions' && 'Condicions Generals de Transport de Mercaderies'}
+        <div className="fixed inset-0 z-50 bg-[#173E0D]/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 border border-[#2E741B]/30 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="text-base font-bold text-[#14360E]">
+                {legalModal === 'gdp' && 'Manual de Calidad GDP Carretera (AEMPS / 2013/C 343/01)'}
+                {legalModal === 'atp' && 'Condiciones Generales de Transporte Terrestre ATP FRC'}
+                {legalModal === 'privacidad' && 'Protección de Datos y Trazabilidad UNE-EN 12830'}
               </h3>
               <button
                 type="button"
                 onClick={() => setLegalModal(null)}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="p-6 text-xs text-slate-300 space-y-4 leading-relaxed">
-              {legalModal === 'avis' && (
-                <>
-                  <p>
-                    En compliment de la Llei 34/2002 (LSSI-CE), s'informa que aquest lloc web correspon a un projecte formatiu de l'entitat acadèmica <strong>ADAM TRANSPORT AND LOGISTIC</strong>.
-                  </p>
-                  <p>
-                    <strong>Denominació:</strong> Adam Transport and Logistic S.L. (Projecte Acadèmic)<br />
-                    <strong>CIF Fictici:</strong> B-08992341<br />
-                    <strong>Domicili Operatiu:</strong> Carrer del Port, Moll Sud, Nau 14-B, 08040 Barcelona, Espanya.<br />
-                    <strong>Contacte Oficial:</strong> adam043@vidalibarraquer.net | Tel. +34 932 45 88 00
-                  </p>
-                  <p>
-                    La informació continguda té una finalitat exclusivament formativa i acadèmica en l'àmbit de la logística internacional, duanes i transports.
-                  </p>
-                </>
+            <div className="py-4 text-xs text-slate-600 space-y-3 leading-relaxed">
+              {legalModal === 'gdp' && (
+                <p>
+                  Toda la flota de camiones frigoríficos de MEDICAM (medicam.cat) dentro de España cumple las directrices europeas y nacionales de Buenas Prácticas de Distribución de medicamentos supervisadas por la AEMPS y nuestra Persona Cualificada (QP).
+                </p>
               )}
-
-              {legalModal === 'privacitat' && (
-                <>
-                  <p>
-                    D'acord amb el Reglament (UE) 2016/679 (RGPD) i la Llei Orgànica 3/2018 (LOPDGDD), les dades recollides mitjançant el formulari de cotització seran tractades per elaborar pressupostos logístics.
-                  </p>
-                  <p>
-                    <strong>Responsable:</strong> Adam Transport and Logistic S.L.<br />
-                    <strong>Finalitat:</strong> Tramitació de tarifes de transport i assistència tècnica.<br />
-                    <strong>Legitimació:</strong> Consentiment exprés en enviar el formulari.<br />
-                    <strong>Drets:</strong> Drets d'accés, rectificació i supressió mitjançant sol·licitud a <em>adam043@vidalibarraquer.net</em>.
-                  </p>
-                </>
+              {legalModal === 'atp' && (
+                <p>
+                  Los transportes nacionales por carretera de MEDICAM operan bajo Acuerdo ATP Clase FRC, Ley de Ordenación de los Transportes Terrestres (LOTT) y estándar de seguridad antirrobo TAPA TSR-1. Tráfico: operacions@medicam.cat.
+                </p>
               )}
-
-              {legalModal === 'cookies' && (
-                <>
-                  <p>
-                    Aquest lloc web utilitza exclusivament cookies tècniques estrictament necessàries per a la navegació i el funcionament correcte del formulari de cotització i les eines de càlcul.
-                  </p>
-                  <p>
-                    No s'utilitzen cookies publicitàries ni de rastreig de perfils de tercers sense consentiment.
-                  </p>
-                </>
+              {legalModal === 'privacidad' && (
+                <p>
+                  Los registros telemétricos de temperatura y eventos de custodia electrónica se conservan con firma digital conforme a UNE-EN 12830, Anexo 11 y LOPDGDD / RGPD. Contacto general: info@medicam.cat.
+                </p>
               )}
-
-              {legalModal === 'condicions' && (
-                <>
-                  <p>
-                    Totes les operacions de transport terrestre i marítim es regeixen per la Llei 15/2009 del contracte de transport terrestre (LOTT), el Conveni CMR (Ginebra 1956) i les Regles de la Haia-Visby per al transport marítim sota Bill of Lading.
-                  </p>
-                  <p>
-                    La responsabilitat s'ajusta als barems internacionals establerts (8,33 DEG/kg en carretera i 666,67 DEG/buit o 2 DEG/kg en transport marítim).
-                  </p>
-                </>
-              )}
-
-              <div className="pt-4 border-t border-purple-900/80 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setLegalModal(null)}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-700 to-pink-600 text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
-                >
-                  Entès i Tancar
-                </button>
-              </div>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setLegalModal(null)}
+                className="px-4 py-2 rounded-lg bg-[#2E741B] hover:bg-[#225814] text-white text-xs font-bold cursor-pointer"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

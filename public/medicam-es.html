@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEDICAM | Transporte Farmacéutico en Camión Frigorífico en España</title>
+  <meta name="description" content="Flota española de camiones frigoríficos ATP Clase FRC y furgones clínicos dedicados al transporte de medicamentos en España bajo normativa AEMPS y EU GDP." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #14360E;
+      --primary-forest: #173E0D;
+      --green-pharma: #2E741B;
+      --green-hover: #225814;
+      --green-lime: #A3E635;
+      --yellow-pharma: #F5E626;
+      --yellow-hover: #E5D618;
+      --bg: #F4F7F2;
+      --white: #FFFFFF;
+      --muted: #475569;
+      --border: #D9E4D4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--primary); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font-family: inherit; }
+
+    .clinical-grid {
+      background-image:
+        linear-gradient(to right, rgba(245, 230, 38, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(245, 230, 38, 0.06) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    .container { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 76px 0; border-bottom: 1px solid var(--border); }
+    .section-dark { background: var(--green-pharma); color: var(--white); border-bottom: 1px solid var(--green-hover); }
+    .section-white { background: var(--white); }
+
+    .topbar { background: var(--primary-forest); color: rgba(255, 255, 255, 0.9); font-size: 12px; border-bottom: 1px solid var(--green-pharma); }
+    .topbar-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+    .live-pill { display: inline-flex; align-items: center; gap: 6px; color: var(--yellow-pharma); font-weight: 600; }
+    .lang-switch { display: inline-flex; background: #102C09; border: 1px solid var(--green-pharma); border-radius: 6px; padding: 2px; gap: 2px; }
+    .lang-btn { border: none; background: transparent; color: rgba(255, 255, 255, 0.85); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer; }
+    .lang-btn.active { background: var(--yellow-pharma); color: var(--primary); }
+
+    header { position: sticky; top: 0; z-index: 40; background: var(--white); border-bottom: 2px solid var(--green-pharma); }
+    .nav-inner { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: var(--primary); }
+    nav.desktop { display: flex; align-items: center; gap: 26px; font-size: 14px; font-weight: 600; color: #2E5426; }
+    nav.desktop a:hover { color: var(--green-pharma); text-decoration: underline; text-underline-offset: 4px; }
+
+    .btn-cta {
+      display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px;
+      background: var(--green-pharma); color: var(--white); font-size: 13px; font-weight: 700;
+      border: none; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-cta:hover { background: var(--green-hover); }
+
+    .btn-yellow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 8px;
+      background: var(--yellow-pharma); color: var(--primary); font-size: 14px; font-weight: 800;
+      border: none; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-yellow:hover { background: var(--yellow-hover); }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.75); background: rgba(23, 62, 13, 0.72); color: var(--white); font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+
+    .menu-toggle { display: none; background: none; border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; color: var(--primary); }
+    .mobile-menu { display: none; background: var(--white); border-bottom: 1px solid var(--border); padding: 12px 24px; flex-direction: column; gap: 8px; }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { padding: 8px 0; font-size: 14px; font-weight: 600; border-bottom: 1px solid #EEF2EC; }
+
+    .hero { background: var(--green-pharma); color: var(--white); padding: 68px 0 56px; position: relative; overflow: hidden; }
+    .hero-bg-photo { position: absolute; inset: 0; background-color: var(--green-pharma); pointer-events: none; }
+    .hero-bg-photo img { width: 100%; height: 100%; object-fit: cover; object-position: right; filter: grayscale(100%) contrast(1.08) brightness(0.95); mix-blend-mode: multiply; opacity: 0.8; }
+    .hero-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, #2B6D19 0%, #2E741B 42%, rgba(46, 116, 27, 0.84) 64%, rgba(102, 178, 34, 0.56) 100%); pointer-events: none; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1.2fr 0.95fr; gap: 44px; align-items: center; }
+    .eyebrow { color: rgba(255, 255, 255, 0.92); font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 6px; }
+    .hero h1 { font-size: clamp(1.95rem, 3.8vw, 3rem); line-height: 1.08; font-weight: 800; letter-spacing: -0.02em; }
+    .hero-highlight { color: var(--yellow-pharma); font-size: 20px; font-weight: 800; margin-top: 16px; }
+    .hero-list { margin-top: 14px; font-size: 14px; color: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; gap: 6px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
+
+    .telemetry-card { background: rgba(23, 62, 13, 0.95); border: 1px solid rgba(163, 230, 53, 0.45); border-radius: 16px; padding: 22px; }
+    .flight-tabs { display: flex; gap: 6px; background: #102C09; padding: 4px; border-radius: 8px; margin: 14px 0; border: 1px solid rgba(255, 255, 255, 0.15); }
+    .flight-tab { flex: 1; padding: 6px; border: none; border-radius: 6px; background: transparent; color: rgba(255, 255, 255, 0.82); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .flight-tab.active { background: var(--yellow-pharma); color: var(--primary); font-weight: 800; }
+    .tele-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .tele-box { background: #215314; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 12px; }
+    .tele-label { font-size: 11px; color: rgba(255, 255, 255, 0.82); display: block; }
+    .tele-val { font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+    .kpi-strip { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 44px; padding-top: 26px; border-top: 1px solid rgba(255, 255, 255, 0.22); }
+    .kpi-num { font-size: 24px; font-weight: 700; }
+    .kpi-desc { font-size: 12px; color: rgba(255, 255, 255, 0.85); margin-top: 4px; }
+
+    .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; margin-top: 32px; }
+    .bento-7 { grid-column: span 7; }
+    .bento-5 { grid-column: span 5; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+    .card-dark { background: var(--green-pharma); color: var(--white); border: 1px solid var(--green-hover); border-radius: 16px; padding: 28px; }
+    .card h3, .card-dark h3 { font-size: 20px; font-weight: 700; margin-top: 8px; }
+    .card p { font-size: 14px; color: var(--muted); margin-top: 10px; }
+    .card-dark p { font-size: 14px; color: rgba(255, 255, 255, 0.92); margin-top: 10px; }
+    .section-title { font-size: clamp(1.6rem, 3vw, 2.25rem); font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+    .section-lead { font-size: 15px; color: var(--muted); max-width: 660px; margin-top: 10px; }
+
+    .cold-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: var(--bg); padding: 6px; border-radius: 12px; border: 1px solid var(--border); margin: 28px 0; }
+    .cold-tab { border: none; background: transparent; text-align: left; padding: 12px; border-radius: 8px; cursor: pointer; color: var(--primary); }
+    .cold-tab.active { background: var(--green-pharma); color: var(--white); }
+    .cold-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; }
+
+    .search-bar { display: flex; gap: 10px; background: var(--primary-forest); border: 1px solid rgba(163, 230, 53, 0.35); padding: 18px; border-radius: 14px; margin-top: 24px; }
+    .search-bar input { flex: 1; background: #215314; border: 1px solid rgba(255, 255, 255, 0.25); color: var(--white); padding: 12px 16px; border-radius: 8px; font-size: 14px; }
+    .code-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .code-chip { background: #215314; border: 1px solid rgba(255, 255, 255, 0.25); color: var(--white); padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .code-chip.active { background: var(--yellow-pharma); color: var(--primary); font-weight: 800; border-color: var(--yellow-pharma); }
+
+    .tracker-card { background: var(--white); color: var(--primary); border-radius: 16px; padding: 28px; margin-top: 24px; }
+    .progress-track { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; margin: 10px 0 24px; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; background: var(--green-pharma); transition: width 0.4s ease; }
+
+    .calc-grid { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 32px; align-items: start; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .field input, .field select { width: 100%; padding: 10px 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 14px; background: var(--white); color: var(--primary); }
+    .summary-card { background: var(--primary-forest); color: var(--white); border-radius: 16px; padding: 28px; border: 1px solid var(--green-pharma); }
+
+    footer { background: var(--primary-forest); color: rgba(255, 255, 255, 0.85); padding: 56px 0 32px; font-size: 13px; }
+    .footer-grid { display: grid; grid-template-columns: 1.2fr 2fr; gap: 36px; padding-bottom: 36px; border-bottom: 1px solid rgba(255, 255, 255, 0.16); }
+    .footer-hubs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+    @media (max-width: 960px) {
+      nav.desktop, .desktop-only { display: none !important; }
+      .menu-toggle { display: block; }
+      .hero-grid, .cold-panel, .calc-grid, .footer-grid { grid-template-columns: 1fr; }
+      .bento-7, .bento-5 { grid-column: span 12; }
+      .grid-2, .grid-3, .grid-4, .grid-5, .cold-tabs, .kpi-strip, .footer-hubs { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .grid-2, .grid-3, .grid-4, .grid-5, .cold-tabs, .form-grid, .footer-hubs { grid-template-columns: 1fr; }
+      .search-bar { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span class="live-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h6.27"/></svg>
+          <span id="lbl-desk">Centro Operativo Farmacéutico España activo</span>
+        </span>
+        <span>|</span>
+        <a href="mailto:operacions@medicam.cat" class="mono">operacions@medicam.cat</a>
+        <span>|</span>
+        <a href="tel:+34932458800" class="mono"><strong style="color:#fff">+34 932 45 88 00</strong></a>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="color:var(--yellow-pharma);font-weight:700;">Web Académica · Proyecto educativo sin actividad comercial real</span>
+        <div class="lang-switch">
+          <button class="lang-btn" onclick="setLang('ca', this)">CA</button>
+          <button class="lang-btn active" onclick="setLang('es', this)">ES</button>
+          <button class="lang-btn" onclick="setLang('en', this)">EN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container nav-inner">
+      <a href="#inicio" class="brand">
+        <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+          <circle cx="22" cy="24" r="14" stroke="#14360E" stroke-width="2.3"/>
+          <circle cx="22" cy="24" r="6" stroke="#14360E" stroke-width="2"/>
+          <path d="M16 32V24C16 20.7 18.7 18 22 18C25.3 18 28 20.7 28 24V32" stroke="#14360E" stroke-width="2.1" stroke-linecap="round"/>
+          <path d="M14.5 11.5H29.5C28.5 15.5 25.5 17.8 22 17.8C18.5 17.8 15.5 15.5 14.5 11.5Z" stroke="#14360E" stroke-width="2.1" stroke-linejoin="round"/>
+          <path d="M22 11.5V6.5C22 4.8 23.6 3.8 25.4 4.3C27 4.7 27.6 6.2 26.8 7.6C25.9 9 23.2 9.4 22 11.5Z" stroke="#2E741B" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="22" cy="24" r="2.2" fill="#2E741B"/>
+        </svg>
+        <span>MEDICAM</span>
+      </a>
+
+      <nav class="desktop">
+        <a href="#servicios">Servicios</a>
+        <a href="#corredores">Rutas España</a>
+        <a href="#espectro">Cadena de Frío</a>
+        <a href="#flota">Flota</a>
+        <a href="#cotizador">Cotizador</a>
+      </nav>
+
+      <div style="display:flex;align-items:center;gap:10px;">
+        <a href="#tracker" class="btn-cta desktop-only">+ Rastrear Camión</a>
+        <button class="menu-toggle" onclick="document.getElementById('mobileMenu').classList.toggle('open')">Menú</button>
+      </div>
+    </div>
+    <div id="mobileMenu" class="mobile-menu">
+      <a href="#servicios" onclick="this.parentElement.classList.remove('open')">Servicios</a>
+      <a href="#corredores" onclick="this.parentElement.classList.remove('open')">Rutas España</a>
+      <a href="#espectro" onclick="this.parentElement.classList.remove('open')">Cadena de Frío</a>
+      <a href="#flota" onclick="this.parentElement.classList.remove('open')">Flota</a>
+      <a href="#tracker" onclick="this.parentElement.classList.remove('open')">Rastrear Camión</a>
+      <a href="#cotizador" onclick="this.parentElement.classList.remove('open')">Cotizador</a>
+    </div>
+  </header>
+
+  <section id="inicio" class="hero clinical-grid">
+    <div class="hero-bg-photo">
+      <img src="/src/assets/images/hero_pharma_truck_spain_1795018963010.jpg" alt="Camión frigorífico farmacéutico MEDICAM España" style="object-position:center;" />
+    </div>
+    <div class="hero-scrim" style="background:linear-gradient(105deg, rgba(35,92,22,0.90) 0%, rgba(46,116,27,0.80) 46%, rgba(46,116,27,0.65) 72%, rgba(92,168,32,0.45) 100%);"></div>
+    <svg viewBox="0 0 1440 720" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" aria-hidden="true">
+      <g opacity="0.14" stroke="#F5E626" fill="none">
+        <circle cx="170" cy="180" r="110" stroke-width="1.2" stroke-dasharray="6 6"/>
+        <circle cx="170" cy="180" r="175" stroke-width="1"/>
+        <path d="M150 180H190M170 160V200" stroke-width="4" stroke-linecap="round"/>
+        <path d="M0 540 H240 L275 495 L305 585 L335 520 L360 540 H620" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <path d="M 460 720 C 660 470, 940 270, 1440 110 L 1440 230 C 1020 380, 790 530, 620 720 Z" fill="#A3E635" fill-opacity="0.22"/>
+      <path d="M 730 720 C 890 530, 1110 385, 1440 285 L 1440 365 C 1170 465, 975 575, 845 720 Z" fill="#F5E626" fill-opacity="0.16"/>
+    </svg>
+
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow">medicam.cat · Red Oficial de Transporte Sanitario en España · ATP FRC &amp; AEMPS</span>
+          <h1 id="hero-title">“ENTREGA DE MEDICAMENTOS HOSPITALARIOS EN CAMIÓN FRIGORÍFICO”</h1>
+          <div id="hero-sub" class="hero-highlight">Servicio Continuo Península y Baleares · -196 °C a +25 °C</div>
+          <div class="hero-list">
+            <strong>Cobertura Directa en Hospitales y Centros Sanitarios:</strong>
+            <span><strong>-Hospital Universitari Vall d’Hebron y Clínic (Barcelona)</strong>, enlace diario desde ZAL Pharma</span>
+            <span><strong>-Servicio de Farmacia Hospitalaria La Paz y 12 de Octubre (Madrid)</strong></span>
+            <span><strong>-Hospital Universitario Virgen Macarena y Virgen del Rocío (Sevilla)</strong></span>
+          </div>
+          <div class="hero-actions">
+            <a href="#cotizador" class="btn-yellow">Cotizar Envío en Camión →</a>
+            <a href="#tracker" class="btn-outline">Rastrear Expedición</a>
+          </div>
+        </div>
+
+        <div class="telemetry-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.16);">
+            <div>
+              <span style="font-size:11px;color:var(--green-lime);display:block;">Telemetría Satelital en Carretera</span>
+              <strong id="hero-unit-name" class="mono" style="font-size:14px;">Unidad MDC-104 · Tráiler Bi-Zona ATP FRC</strong>
+            </div>
+            <span class="mono" style="font-size:11px;color:var(--yellow-pharma);background:var(--green-pharma);border:1px solid rgba(245,230,38,0.55);padding:4px 8px;border-radius:6px;">LIVE</span>
+          </div>
+
+          <div class="flight-tabs">
+            <button class="flight-tab active mono" onclick="selectHeroTruck(0, this)">MDC-104</button>
+            <button class="flight-tab mono" onclick="selectHeroTruck(1, this)">MDC-218</button>
+            <button class="flight-tab mono" onclick="selectHeroTruck(2, this)">MDC-305</button>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#fff;gap:8px;">
+            <span id="hero-route">Barcelona (ZAL) → Madrid (Autovía A-2)</span>
+            <span id="hero-cargo" style="color:var(--green-lime);font-weight:700;">Anticuerpos Monoclonales</span>
+          </div>
+
+          <div class="tele-grid">
+            <div class="tele-box">
+              <span class="tele-label">Temp. Caja</span>
+              <div id="hero-temp" class="tele-val mono" style="color:var(--yellow-pharma);">4.3 °C</div>
+            </div>
+            <div class="tele-box">
+              <span class="tele-label">Velocidad Ruta</span>
+              <div id="hero-speed" class="tele-val mono">86 km/h</div>
+            </div>
+            <div class="tele-box">
+              <span class="tele-label">Humedad Relativa</span>
+              <div id="hero-hum" class="tele-val mono">41.2 %</div>
+            </div>
+            <div class="tele-box">
+              <span class="tele-label">Precinto Sanitario</span>
+              <div id="hero-seal" class="tele-val" style="font-size:13px;color:var(--green-lime);">Precintado · 0 aperturas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div><div class="kpi-num mono">99.97 %</div><div class="kpi-desc">Estabilidad térmica anual en camiones ATP FRC</div></div>
+        <div><div class="kpi-num mono" style="color:var(--yellow-pharma);">0 Rupturas</div><div class="kpi-desc">Traslado puerta a farmacia hospitalaria sin trasbordos</div></div>
+        <div><div class="kpi-num mono">48 Unidades</div><div class="kpi-desc">Tráileres bi-zona, rígidos 18t y furgones clínicos</div></div>
+        <div><div class="kpi-num mono" style="color:var(--green-lime);">medicam.cat</div><div class="kpi-desc">Bases propias en Barcelona ZAL y Madrid con QP</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicios" class="section section-white">
+    <div class="container">
+      <span class="eyebrow" style="color:var(--green-pharma);">Logística Hospitalaria y Farmacéutica en Camión</span>
+      <h2 class="section-title">Transporte sanitario en camión adaptado a cada medicamento</h2>
+      <p class="section-lead">Cada vehículo opera como una cámara limpia móvil certificada ATP Clase FRC, conectando laboratorios con farmacias hospitalarias sin rupturas térmicas.</p>
+
+      <div class="bento-grid">
+        <article class="card-dark bento-7">
+          <span class="mono" style="font-size:12px;color:var(--yellow-pharma);font-weight:700;">01 · Furgón Clínico Dedicado (Puerta a Farmacia)</span>
+          <h3>Entrega Directa de Medicamentos Hospitalarios y Terapias Celulares</h3>
+          <p>Vehículos exclusivos directos desde el laboratorio hasta Farmacia Hospitalaria o Hematología con bancada antivibración y doble sonda PT100 para CAR-T y biológicos.</p>
+          <div style="margin-top:22px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <span class="mono" style="font-size:12px;color:var(--yellow-pharma);">Salida inmediata BCN / MAD: &lt; 30 min</span>
+            <a href="#cotizador" class="btn-yellow">Solicitar furgón directo →</a>
+          </div>
+        </article>
+
+        <article class="card bento-5" style="background:var(--bg);">
+          <span class="mono" style="font-size:12px;color:var(--green-pharma);font-weight:700;">02 · Tráileres Bi-Temperatura FRC</span>
+          <h3>Líneas Diarias Bi-Zona por Península y Baleares</h3>
+          <p>Camiones frigoríficos de 18 t y 33 palés con mamparo divisor para llevar -20 °C y +2/+8 °C simultáneos, más enlace Ro-Ro conectado a 380V a Palma.</p>
+        </article>
+
+        <article class="card bento-5" style="background:var(--bg);">
+          <span class="mono" style="font-size:12px;color:var(--green-pharma);font-weight:700;">03 · Capilaridad Hospitalaria</span>
+          <h3>Entrega Directa en Farmacia Hospitalaria</h3>
+          <p>Furgones silenciosos ECO/CERO autorizados para acceso directo a recintos hospitalarios y centros de ensayos clínicos en toda España.</p>
+        </article>
+
+        <article class="card bento-7" style="background:var(--bg);">
+          <span class="mono" style="font-size:12px;color:var(--green-pharma);font-weight:700;">04 · Auditoría Clínica &amp; Bioseguridad</span>
+          <h3>Mapeo Térmico 3D, Termógrafos EN 12830 y Supervisión QP</h3>
+          <p>Cualificación IQ/OQ/PQ en verano e invierno español, precintos electrónicos TAPA TSR-1 contra robo y registro de temperatura inmutable conforme a la AEMPS.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="corredores" class="section">
+    <div class="container">
+      <span class="eyebrow" style="color:var(--green-pharma);">Red Terrestre Exclusiva en España</span>
+      <h2 class="section-title">Autovías farmacéuticas y hospitales conectados por carretera</h2>
+      <div class="grid-4" style="margin-top:28px;">
+        <div class="card"><h3>Barcelona (ZAL)</h3><p>Sede Central · Eje AP-7 / A-2 · Vall d’Hebron, Clínic y Sant Pau.</p></div>
+        <div class="card"><h3>Madrid (M-50)</h3><p>Hub Central · A-2 / A-4 / A-6 · Hospital La Paz, 12 de Octubre y Ramón y Cajal.</p></div>
+        <div class="card"><h3>Valencia &amp; Sevilla</h3><p>Corredores AP-7 / A-3 / A-4 · Hospital La Fe y Hospital Virgen del Rocío.</p></div>
+        <div class="card"><h3>Bilbao, Galicia &amp; Palma</h3><p>AP-68, A-6 y camión Ro-Ro 380V a Palma · Cruces, CHUS y Son Espases.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="espectro" class="section section-white">
+    <div class="container">
+      <span class="eyebrow" style="color:var(--green-pharma);">Espectro Térmico en Carretera</span>
+      <h2 class="section-title">Cobertura completa de -196 °C a +25 °C</h2>
+
+      <div class="cold-tabs" id="cold-tabs"></div>
+
+      <div class="cold-panel">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:14px;gap:12px;flex-wrap:wrap;">
+            <h3 id="cold-name" style="font-size:22px;font-weight:800;"></h3>
+            <span id="cold-range" class="mono" style="font-size:22px;font-weight:700;color:var(--green-pharma);"></span>
+          </div>
+          <div class="grid-2" style="margin-top:18px;gap:16px;">
+            <div><strong style="font-size:12px;color:var(--muted);display:block;">Carrocería / Embalaje</strong><span id="cold-pack" style="font-size:14px;"></span></div>
+            <div><strong style="font-size:12px;color:var(--muted);display:block;">Autonomía en Ruta</strong><span id="cold-aut" style="font-size:14px;"></span></div>
+            <div><strong style="font-size:12px;color:var(--muted);display:block;">Tolerancia Térmica</strong><span id="cold-tol" style="font-size:14px;"></span></div>
+            <div><strong style="font-size:12px;color:var(--muted);display:block;">Protocolo de Entrega</strong><span id="cold-prot" style="font-size:14px;"></span></div>
+          </div>
+        </div>
+        <div class="card">
+          <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">Medicamentos Habituales</strong>
+          <ul id="cold-meds" style="margin-top:14px;padding-left:18px;font-size:14px;color:#334155;display:flex;flex-direction:column;gap:8px;"></ul>
+          <a href="#cotizador" class="btn-cta" style="margin-top:18px;width:100%;justify-content:center;">Cotizar camión en este rango →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="flota" class="section">
+    <div class="container">
+      <span class="eyebrow" style="color:var(--green-pharma);">Parque Móvil Certificado ATP FRC</span>
+      <h2 class="section-title">Flota de Camiones Frigoríficos y Unidades Clínicas</h2>
+      <div class="grid-3" style="margin-top:28px;">
+        <article class="card"><span class="mono" style="font-size:11px;color:var(--green-pharma);font-weight:700;">TRÁILER BI-ZONA FRC</span><h3>Tráiler 33 Euro-palés</h3><p>Doble cámara independiente (-25 °C y +2/+8 °C) · Seguridad TAPA TSR-1.</p></article>
+        <article class="card"><span class="mono" style="font-size:11px;color:var(--green-pharma);font-weight:700;">RÍGIDO HOSPITALARIO</span><h3>Camión Rígido 18 t</h3><p>18 Euro-palés · Trampilla retráctil 2.000 kg y toma nocturna 400V.</p></article>
+        <article class="card"><span class="mono" style="font-size:11px;color:var(--green-pharma);font-weight:700;">ÚLTIMA MILLA CLÍNICA</span><h3>Furgón Isotermo 3,5 t</h3><p>Acceso urbano a farmacia hospitalaria · Compresor eléctrico silencioso.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="tracker" class="section section-dark clinical-grid">
+    <div class="container">
+      <span class="eyebrow" style="color:var(--yellow-pharma);">Live Cold Chain Truck Tracker</span>
+      <h2 class="section-title" style="color:#fff;">Rastreador GPS de Camiones y Telemetría Clínica en Vivo</h2>
+      <p style="color:rgba(255,255,255,0.9);margin-top:8px;">Audita cualquier expedición de MEDICAM en España, lote clínico, sondas de caja y curva térmica EN 12830.</p>
+
+      <div class="search-bar">
+        <input id="awb-input" type="text" class="mono" value="MDC-2026-0841" placeholder="Introduce código (ej: MDC-2026-0841)..." />
+        <button class="btn-yellow" onclick="trackShipment()">Auditar Camión →</button>
+      </div>
+
+      <div class="code-chips">
+        <button class="code-chip active mono" onclick="trackShipment('MDC-2026-0841', this)">MDC-2026-0841</button>
+        <button class="code-chip mono" onclick="trackShipment('MDC-2026-0912', this)">MDC-2026-0912</button>
+        <button class="code-chip mono" onclick="trackShipment('MDC-2026-0735', this)">MDC-2026-0735</button>
+      </div>
+
+      <div id="tracker-error" style="display:none;margin-top:16px;padding:12px 16px;border-radius:10px;background:rgba(127,29,29,0.75);border:1px solid rgba(252,165,165,0.5);color:#FEE2E2;font-size:13px;font-weight:600;"></div>
+
+      <div id="tracker-result" class="tracker-card">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding-bottom:16px;">
+          <div>
+            <span id="tr-unit" class="mono" style="font-size:12px;color:var(--muted);"></span>
+            <h3 id="tr-code" class="mono" style="font-size:24px;font-weight:800;"></h3>
+            <p id="tr-prod" style="font-size:14px;color:var(--muted);"></p>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:12px;color:var(--muted);display:block;">ETA / Llegada Hospital</span>
+            <strong id="tr-eta" class="mono" style="font-size:15px;"></strong>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;">
+            <span id="tr-orig"></span>
+            <span id="tr-dest"></span>
+          </div>
+          <div class="progress-track"><div id="tr-bar" class="progress-fill"></div></div>
+        </div>
+
+        <div class="grid-5">
+          <div style="background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:8px;">
+            <span style="font-size:11px;color:var(--muted);">Temp. Caja</span>
+            <div id="tr-temp" class="mono" style="font-size:17px;font-weight:700;margin-top:4px;"></div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:8px;">
+            <span style="font-size:11px;color:var(--muted);">Vibración Eje</span>
+            <div id="tr-g" class="mono" style="font-size:14px;font-weight:700;margin-top:6px;"></div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:8px;">
+            <span style="font-size:11px;color:var(--muted);">Puertas Traseras</span>
+            <div id="tr-door" class="mono" style="font-size:13px;font-weight:700;color:var(--green-pharma);margin-top:6px;"></div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:8px;">
+            <span style="font-size:11px;color:var(--muted);">Autonomía Frío</span>
+            <div id="tr-bat" class="mono" style="font-size:14px;font-weight:700;margin-top:6px;"></div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:8px;">
+            <span style="font-size:11px;color:var(--muted);">Humedad</span>
+            <div id="tr-hum" class="mono" style="font-size:16px;font-weight:700;margin-top:4px;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;">
+          <strong style="font-size:13px;display:block;margin-bottom:8px;">Registro Lineal de Estabilidad Térmica (EN 12830)</strong>
+          <svg id="thermal-svg" viewBox="0 0 640 180" style="width:100%;height:190px;background:var(--bg);border:1px solid var(--border);border-radius:8px;"></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cotizador" class="section">
+    <div class="container">
+      <div class="calc-grid">
+        <div class="card">
+          <span class="eyebrow" style="color:var(--green-pharma);">Cotizador Terrestre en Tiempo Real</span>
+          <h2 class="section-title" style="font-size:26px;">Calculadora de Transporte en Camión Farmacéutico</h2>
+          <form onsubmit="submitQuote(event)">
+            <div class="form-grid">
+              <div class="field">
+                <label>Origen (España)</label>
+                <select id="q-origin" onchange="recalcQuote()">
+                  <option>BCN · Barcelona (ZAL Pharma)</option>
+                  <option>MAD · Madrid (Hub Central)</option>
+                  <option>VLC · Valencia (Ribarroja)</option>
+                  <option>BIO · Bilbao (Corredor Norte)</option>
+                  <option>SVQ · Sevilla (Plataforma Sur)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Destino (España)</label>
+                <select id="q-dest" onchange="recalcQuote()">
+                  <option>MAD · Madrid (Hub Central)</option>
+                  <option>BCN · Barcelona (ZAL Pharma)</option>
+                  <option>VLC · Valencia (Ribarroja)</option>
+                  <option>SVQ · Sevilla (Plataforma Sur)</option>
+                  <option>BIO · Bilbao (Corredor Norte)</option>
+                  <option>SCQ · Santiago / A Coruña (Galicia)</option>
+                  <option>PMI · Palma de Mallorca (Ro-Ro 380V)</option>
+                </select>
+              </div>
+              <div class="field"><label>Peso Bruto (kg)</label><input id="q-weight" type="number" value="650" min="1" oninput="recalcQuote()" /></div>
+              <div class="field"><label>Euro-palés (1 - 33)</label><input id="q-pallets" type="number" value="4" min="1" max="33" oninput="recalcQuote()" /></div>
+              <div class="field">
+                <label>Rango Térmico</label>
+                <select id="q-temp" onchange="recalcQuote()">
+                  <option value="1.9">Criogénico (-196 °C a -150 °C)</option>
+                  <option value="1.55">Ultra-congelado (-80 °C a -60 °C)</option>
+                  <option value="1.25">Congelado (-25 °C a -15 °C)</option>
+                  <option value="1.12" selected>Refrigerado (+2 °C a +8 °C)</option>
+                  <option value="1.0">Ambiente Controlado (+15 °C a +25 °C)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Modalidad de Camión</label>
+                <select id="q-urg" onchange="recalcQuote()">
+                  <option value="consolidado">Grupaje Refrigerado GDP (24h)</option>
+                  <option value="directo" selected>Camión Directo Dedicado (Mismo Día)</option>
+                  <option value="furgon_urgente">Furgón Clínico Express (Farmacia Hospitalaria)</option>
+                </select>
+              </div>
+              <div class="field"><label>Laboratorio / Hospital</label><input id="q-company" type="text" required placeholder="Hospital Clínic / Laboratorios S.A." /></div>
+              <div class="field"><label>Correo Corporativo</label><input id="q-email" type="email" required placeholder="farmacia@hospital.es" /></div>
+            </div>
+            <div id="q-msg" style="display:none;margin-top:14px;padding:12px;border-radius:8px;background:rgba(46,116,27,0.12);border:1px solid rgba(46,116,27,0.35);color:var(--primary);font-size:13px;font-weight:600;"></div>
+            <button type="submit" class="btn-cta" style="margin-top:18px;width:100%;justify-content:center;padding:14px;">Confirmar Cotización y Reservar Camión →</button>
+          </form>
+        </div>
+
+        <div class="summary-card">
+          <span class="mono" style="font-size:12px;color:var(--yellow-pharma);text-transform:uppercase;font-weight:700;">Estimación Operativa por Carretera</span>
+          <div style="margin-top:10px;display:flex;align-items:baseline;gap:8px;">
+            <span id="q-price" class="mono" style="font-size:44px;font-weight:800;">1.263</span>
+            <span class="mono" style="color:var(--yellow-pharma);font-size:18px;font-weight:700;">EUR</span>
+          </div>
+          <p style="font-size:12px;color:rgba(255,255,255,0.82);margin-top:6px;">Incluye porte en camión ATP FRC, peajes, telemetría GPS y certificado UNE-EN 12830.</p>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.16);display:flex;flex-direction:column;gap:10px;font-size:14px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,0.8);">Tiempo en Ruta:</span><strong id="q-hours" class="mono" style="color:var(--yellow-pharma);">7 horas</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,0.8);">Capacidad Reservada:</span><strong id="q-cw" class="mono">4 palés (1.120 kg)</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,0.8);">Gestión Comercial:</span><strong class="mono" style="color:var(--green-lime);">comercial@medicam.cat</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <strong style="font-size:18px;color:#fff;">MEDICAM</strong> <span class="mono" style="color:var(--yellow-pharma);font-size:12px;font-weight:700;">medicam.cat</span>
+          <p style="margin-top:10px;color:rgba(255,255,255,0.82);line-height:1.6;">Operador español de transporte en camión frigorífico ATP Clase FRC especializado exclusivamente en logística farmacéutica y hospitalaria en España.</p>
+          <p class="mono" style="margin-top:10px;">Atención General: <strong style="color:var(--yellow-pharma);">info@medicam.cat</strong></p>
+          <p class="mono" style="margin-top:4px;">Operaciones y Tráfico: <strong style="color:var(--yellow-pharma);">operacions@medicam.cat</strong></p>
+          <p class="mono" style="margin-top:4px;">Cotizaciones y Ventas: <strong style="color:var(--green-lime);">comercial@medicam.cat</strong></p>
+        </div>
+        <div class="footer-hubs">
+          <div><h4 style="color:#fff;font-size:12px;text-transform:uppercase;">Centro y Noreste</h4><p class="mono" style="color:var(--yellow-pharma);margin:6px 0;">BCN · MAD · ZAZ · BIO</p><p style="font-size:12px;">Bases propias en ZAL Port Barcelona y Madrid M-50.</p></div>
+          <div><h4 style="color:#fff;font-size:12px;text-transform:uppercase;">Mediterráneo y Sur</h4><p class="mono" style="color:var(--yellow-pharma);margin:6px 0;">VLC · MUR · SVQ · AGP</p><p style="font-size:12px;">Rutas AP-7, A-3 y A-4 con furgones de última milla.</p></div>
+          <div><h4 style="color:#fff;font-size:12px;text-transform:uppercase;">Noroeste y Ro-Ro Balear</h4><p class="mono" style="color:var(--yellow-pharma);margin:6px 0;">SCQ · LCG · VGO · PMI</p><p style="font-size:12px;">A-6/AP-9 y camión conectado 380V a Palma de Mallorca.</p></div>
+        </div>
+      </div>
+      <div style="padding-top:24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12px;">
+        <span>© 2026 MEDICAM (medicam.cat) · <strong style="color:var(--yellow-pharma);">Web Académica · Proyecto educativo sin actividad comercial real</strong> · ATP FRC · AEMPS</span>
+        <span>UNE-EN 12830 · TAPA TSR-1 · EU GDP</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const HERO_TRUCKS = [
+      { name: 'Unidad MDC-104 · Tráiler Bi-Zona ATP FRC', route: 'Barcelona (ZAL) → Madrid (Autovía A-2)', cargo: 'Anticuerpos Monoclonales', temp: '4.3 °C', speed: '86 km/h', hum: '41.2 %', seal: 'Precintado · 0 aperturas' },
+      { name: 'Unidad MDC-218 · Camión Rígido 18 t FRC', route: 'Madrid → Sevilla (Autovía A-4)', cargo: 'Vacunas Biológicas ARNm', temp: '-71.8 °C', speed: '88 km/h', hum: '28.5 %', seal: 'Precintado · 0 aperturas' },
+      { name: 'Unidad MDC-305 · Furgón Clínico Isotermo', route: 'Barcelona → Palma (Ro-Ro 380V Conectado)', cargo: 'Terapia CAR-T · Cryoport', temp: '-191.4 °C', speed: 'Enlace 380V', hum: '14.0 %', seal: 'Custodia QP · AEMPS' }
+    ];
+
+    const COLD_DATA = [
+      { id: 'crio', short: '-196 / -150 °C', title: 'Criogénico (LN2 Vapor Seco)', range: '-196 °C a -150 °C', pack: 'Tanques Cryoport en anclaje antivibración dentro de furgón climatizado', aut: '336 horas (14 días) autónomos en carretera', tol: '± 0.0 °C sobre umbral -150 °C', prot: 'Entrega directa en mano en sala blanca hospitalaria', meds: ['Terapias génicas y celulares CAR-T autólogas', 'Células madre hematopoyéticas (CPH)', 'Bancos virales y líneas celulares maestras'] },
+      { id: 'ultra', short: '-80 / -60 °C', title: 'Ultra-congelado (Deep Frozen)', range: '-80 °C a -60 °C', pack: 'Congeladores activos Stirling / VIP en furgón', aut: '120 horas validado en ruta con alimentación del camión', tol: '± 2.0 °C sobre consigna (-70 °C)', prot: 'Compresor eléctrico de respaldo en cabina y muelle cerrado', meds: ['Vacunas ARNm y plataformas ácido nucleico', 'Vectores virales adenoasociados (AAV)', 'Enzimas terapéuticas de alta sensibilidad'] },
+      { id: 'froz', short: '-25 / -15 °C', title: 'Congelado Estándar', range: '-25 °C a -15 °C', pack: 'Cajas isotermas ATP Clase FRC con evaporador bi-zona', aut: 'Autonomía continua y toma 400V en estacionamiento', tol: '± 1.5 °C puerta a puerta en España', prot: 'Pre-enfriamiento del camión a -22 °C previo a la carga', meds: ['Plasma sanguíneo fresco congelado', 'Reactivos diagnóstico in vitro (IVD)', 'Inmunoglobulinas y factores de coagulación'] },
+      { id: 'refr', short: '+2 / +8 °C', title: 'Refrigerado Clínico', range: '+2 °C a +8 °C', pack: 'Tráileres y furgones ATP FRC con mamparo divisor bi-zona', aut: 'Motor + modo eléctrico silencioso en entorno hospitalario', tol: 'Consigna +5.0 °C · cero congelación', prot: 'Descarga directa en muelle de farmacia hospitalaria', meds: ['Insulinas humanas recombinantes', 'Anticuerpos monoclonales oncológicos (mAb)', 'Vacunas del calendario nacional español'] },
+      { id: 'crt', short: '+15 / +25 °C', title: 'Ambiente Controlado (CRT)', range: '+15 °C a +25 °C', pack: 'Carrocería isoterma climatizada con bomba de calor y frío', aut: 'Control activo 24h incluso con camión estacionado', tol: 'Aislamiento frente a -10 °C / +45 °C en carretera', prot: 'Estacionamiento vigilado TAPA TSR-1 y trazabilidad continua', meds: ['Fármacos sólidos en blísters sensibles', 'Kits ensayos clínicos Fase I, II y III (AEMPS)', 'Analgésicos parenterales y soluciones IV'] }
+    ];
+
+    const SHIPMENT_DATA = {
+      'MDC-2026-0841': {
+        unit: 'Unidad MDC-104 · Tráiler Bi-Zona ATP FRC · Matrícula 4820-MDC',
+        prod: 'Vacunas ARNm Pediátricas · Lote #ES-2026-884A · Ultra-congelado (-80 °C a -60 °C)',
+        eta: 'En ruta (68 %) · ETA 18/11/2026 14:40 CET',
+        orig: 'Barcelona (ZAL Port)', dest: 'Madrid (Hospital Univ. La Paz)', prog: 68,
+        temp: '-71.4 °C', g: '0.04 G', door: 'Precintado · 0 aperturas', bat: '89 % (940 km)', hum: '26.4 % HR',
+        points: [-72.1, -71.8, -71.2, -71.5, -71.6, -71.5, -71.4, -71.4], tMin: -80, tMax: -60
+      },
+      'MDC-2026-0912': {
+        unit: 'Unidad MDC-218 · Camión Rígido 18 t FRC · Matrícula 9104-MDC',
+        prod: 'Anticuerpos Monoclonales mAb · Lote #ONC-2026-119 · Refrigerado (+2 °C a +8 °C)',
+        eta: 'Última Milla Hospital (92 %) · ETA 18/11/2026 15:15 CET',
+        orig: 'Madrid (Hub Central)', dest: 'Sevilla (Hospital Virgen del Rocío)', prog: 92,
+        temp: '+4.8 °C', g: '0.03 G', door: 'Precintado · 0 aperturas', bat: '74 % (680 km)', hum: '42.1 % HR',
+        points: [4.9, 5.0, 4.7, 4.6, 4.8, 5.0, 4.9, 4.8], tMin: 2, tMax: 8
+      },
+      'MDC-2026-0735': {
+        unit: 'Unidad MDC-305 · Furgón Clínico + Ro-Ro 380V · Matrícula 3308-MDC',
+        prod: 'Terapia Génica CAR-T Autóloga · Lote #CART-BALEAR-07 · Criogénico (-196 °C a -150 °C)',
+        eta: 'Entregado (100 %) · 18/11/2026 09:42 CET',
+        orig: 'Barcelona (Laboratorio Celular)', dest: 'Palma de Mallorca (Hospital Son Espases)', prog: 100,
+        temp: '-191.2 °C', g: '0.01 G', door: 'Recepcionado en Sala Blanca', bat: '96 % (Plena)', hum: '12.5 % HR',
+        points: [-192.4, -192.0, -191.8, -191.6, -191.5, -191.3, -191.1, -191.2], tMin: -196, tMax: -150
+      }
+    };
+
+    function selectHeroTruck(idx, btn) {
+      const f = HERO_TRUCKS[idx];
+      document.getElementById('hero-unit-name').textContent = f.name;
+      document.getElementById('hero-route').textContent = f.route;
+      document.getElementById('hero-cargo').textContent = f.cargo;
+      document.getElementById('hero-temp').textContent = f.temp;
+      document.getElementById('hero-speed').textContent = f.speed;
+      document.getElementById('hero-hum').textContent = f.hum;
+      document.getElementById('hero-seal').textContent = f.seal;
+      document.querySelectorAll('.flight-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function renderColdTabs() {
+      const wrap = document.getElementById('cold-tabs');
+      wrap.innerHTML = COLD_DATA.map((c, i) => `
+        <button class="cold-tab ${i === 3 ? 'active' : ''}" onclick="selectCold(${i}, this)">
+          <div class="mono" style="font-size:12px;font-weight:700;color:${i === 3 ? 'var(--yellow-pharma)' : 'var(--green-pharma)'}">${c.short}</div>
+          <div style="font-size:12px;font-weight:700;margin-top:2px;">${c.title.split(' (')[0]}</div>
+        </button>
+      `).join('');
+      selectCold(3);
+    }
+
+    function selectCold(idx, btn) {
+      const c = COLD_DATA[idx];
+      document.getElementById('cold-name').textContent = c.title;
+      document.getElementById('cold-range').textContent = c.range;
+      document.getElementById('cold-pack').textContent = c.pack;
+      document.getElementById('cold-aut').textContent = c.aut;
+      document.getElementById('cold-tol').textContent = c.tol;
+      document.getElementById('cold-prot').textContent = c.prot;
+      document.getElementById('cold-meds').innerHTML = c.meds.map(m => `<li>${m}</li>`).join('');
+      if (btn) {
+        document.querySelectorAll('.cold-tab').forEach(b => {
+          b.classList.remove('active');
+          b.firstElementChild.style.color = 'var(--green-pharma)';
+        });
+        btn.classList.add('active');
+        btn.firstElementChild.style.color = 'var(--yellow-pharma)';
+      }
+    }
+
+    function drawThermalChart(points, tMin, tMax) {
+      const svg = document.getElementById('thermal-svg');
+      const w = 640, h = 180, padL = 48, padR = 20, padT = 20, padB = 26;
+      const minV = Math.min(...points, tMin) - 1.5;
+      const maxV = Math.max(...points, tMax) + 1.5;
+      const x = i => padL + (i / (points.length - 1)) * (w - padL - padR);
+      const y = v => padT + ((maxV - v) / Math.max(0.1, maxV - minV)) * (h - padT - padB);
+      const bandTop = y(tMax), bandBot = y(tMin);
+      const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(p).toFixed(1)}`).join(' ');
+      svg.innerHTML = `
+        <rect x="${padL}" y="${bandTop}" width="${w - padL - padR}" height="${Math.max(4, bandBot - bandTop)}" fill="#2E741B" fill-opacity="0.14"/>
+        <line x1="${padL}" y1="${bandTop}" x2="${w - padR}" y2="${bandTop}" stroke="#2E741B" stroke-dasharray="4 4"/>
+        <line x1="${padL}" y1="${bandBot}" x2="${w - padR}" y2="${bandBot}" stroke="#2E741B" stroke-dasharray="4 4"/>
+        <text x="${padL - 8}" y="${y(tMax) + 4}" text-anchor="end" font-size="10" fill="#475569" font-family="JetBrains Mono">${tMax}°</text>
+        <text x="${padL - 8}" y="${y(tMin) + 4}" text-anchor="end" font-size="10" fill="#475569" font-family="JetBrains Mono">${tMin}°</text>
+        <path d="${d}" fill="none" stroke="#2E741B" stroke-width="2.6" stroke-linecap="round"/>
+        ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p)}" r="4" fill="#F5E626" stroke="#14360E" stroke-width="1.5"/>`).join('')}
+      `;
+    }
+
+    function trackShipment(codeOverride, pillBtn) {
+      const input = document.getElementById('awb-input');
+      const errBox = document.getElementById('tracker-error');
+      const card = document.getElementById('tracker-result');
+      const code = (codeOverride || input.value).trim().toUpperCase();
+      if (codeOverride) input.value = codeOverride;
+      if (pillBtn) {
+        document.querySelectorAll('.code-chip').forEach(p => p.classList.remove('active'));
+        pillBtn.classList.add('active');
+      }
+      const data = SHIPMENT_DATA[code];
+      if (!data) {
+        errBox.style.display = 'block';
+        errBox.textContent = 'Expedición "' + code + '" no encontrada. Prueba con MDC-2026-0841, MDC-2026-0912 o MDC-2026-0735.';
+        card.style.display = 'none';
+        return;
+      }
+      errBox.style.display = 'none';
+      card.style.display = 'block';
+      document.getElementById('tr-unit').textContent = data.unit;
+      document.getElementById('tr-code').textContent = code;
+      document.getElementById('tr-prod').textContent = data.prod;
+      document.getElementById('tr-eta').textContent = data.eta;
+      document.getElementById('tr-orig').textContent = data.orig;
+      document.getElementById('tr-dest').textContent = data.dest;
+      const bar = document.getElementById('tr-bar');
+      bar.style.width = data.prog + '%';
+      bar.style.background = 'var(--green-pharma)';
+      document.getElementById('tr-temp').textContent = data.temp;
+      document.getElementById('tr-g').textContent = data.g;
+      document.getElementById('tr-door').textContent = data.door;
+      document.getElementById('tr-bat').textContent = data.bat;
+      document.getElementById('tr-hum').textContent = data.hum;
+      drawThermalChart(data.points, data.tMin, data.tMax);
+    }
+
+    function recalcQuote() {
+      const w = Math.max(1, Number(document.getElementById('q-weight').value) || 1);
+      const pal = Math.min(33, Math.max(1, Number(document.getElementById('q-pallets').value) || 1));
+      const dest = document.getElementById('q-dest').value;
+      const tMult = Number(document.getElementById('q-temp').value);
+      const urg = document.getElementById('q-urg').value;
+      const cw = Math.max(w, pal * 280);
+      const dMult = (dest.includes('SCQ') || dest.includes('SVQ')) ? 1.28 : dest.includes('PMI') ? 1.38 : (dest.includes('MAD') || dest.includes('BIO')) ? 1.12 : 0.92;
+      const rates = { consolidado: [0.42, 14], directo: [0.78, 7], furgon_urgente: [1.45, 5] }[urg];
+      const price = urg === 'furgon_urgente' ? Math.round(790 * dMult + cw * 0.48 * tMult) : Math.round(165 + cw * rates[0] * tMult * dMult);
+      const hrs = Math.round(rates[1] * dMult);
+      document.getElementById('q-price').textContent = price.toLocaleString('es-ES');
+      document.getElementById('q-hours').textContent = hrs + ' horas';
+      document.getElementById('q-cw').textContent = pal + ' palés (' + cw + ' kg)';
+    }
+
+    async function submitQuote(e) {
+      e.preventDefault();
+      const code = 'MDC-2026-' + Math.floor(1000 + Math.random() * 8999);
+      const payload = {
+        codigo_expedicion: code,
+        empresa: document.getElementById('q-company').value,
+        email_cliente: document.getElementById('q-email').value,
+        origen: document.getElementById('q-origin').value,
+        destino: document.getElementById('q-dest').value,
+        estimacion_eur: document.getElementById('q-price').textContent + ' €',
+        buzon_comercial: 'comercial@medicam.cat',
+        destinatario_academico: 'adam043@vidalibarraquer.net'
+      };
+      try {
+        await fetch('https://formspree.io/f/xvkkyjgo', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
+      } catch (_) {}
+      const msg = document.getElementById('q-msg');
+      msg.style.display = 'block';
+      msg.textContent = 'Reserva registrada (' + code + ') y remitida a comercial@medicam.cat.';
+    }
+
+    function setLang(lang, btn) {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (lang === 'ca') {
+        document.getElementById('lbl-desk').textContent = 'Centre Operatiu Farmacèutic Espanya actiu';
+        document.getElementById('hero-title').textContent = '“LLIURAMENT DE MEDICAMENTS HOSPITALARIS EN CAMIÓ FRIGORÍFIC”';
+        document.getElementById('hero-sub').textContent = 'Servei Continu Península i Balears · -196 °C a +25 °C';
+      } else if (lang === 'en') {
+        document.getElementById('lbl-desk').textContent = 'Spain Pharmaceutical Operations Desk active';
+        document.getElementById('hero-title').textContent = '“HOSPITAL MEDICATION DELIVERY BY REFRIGERATED PHARMA TRUCK”';
+        document.getElementById('hero-sub').textContent = '24h Iberian & Balearic Coverage · -196 °C to +25 °C';
+      } else {
+        document.getElementById('lbl-desk').textContent = 'Centro Operativo Farmacéutico España activo';
+        document.getElementById('hero-title').textContent = '“ENTREGA DE MEDICAMENTOS HOSPITALARIOS EN CAMIÓN FRIGORÍFICO”';
+        document.getElementById('hero-sub').textContent = 'Servicio Continuo Península y Baleares · -196 °C a +25 °C';
+      }
+    }
+
+    renderColdTabs();
+    trackShipment('MDC-2026-0841');
+    recalcQuote();
+  </script>
+</body>
+</html>
